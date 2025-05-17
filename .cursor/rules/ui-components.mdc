@@ -1,0 +1,41 @@
+---
+description: 
+globs: "**/components/**"
+alwaysApply: false
+---
+# UI Component Guidelines
+
+## ShadCN Components
+- Use ShadCN UI components for consistent styling
+- Customize components to match the project's design system
+- Follow the component documentation for proper usage
+
+## Form Components
+- Use controlled components for form inputs
+- Implement proper validation and error handling
+- Show loading states during form submission
+- Provide clear success/error feedback to users
+
+## Layout Components
+- Use responsive design principles
+- Implement mobile-first approach
+- Use Flexbox and Grid for layouts
+- Ensure proper spacing and alignment
+
+## Navigation Components
+- Implement clear navigation structure
+- Show active states for current page
+- Handle authentication state in navigation
+- Provide breadcrumbs for nested pages
+
+## Media Components
+- Implement lazy loading for images
+- Use Next.js Image component for optimized images
+- Create custom video player for self-hosted videos
+- Implement YouTube embeds for YouTube videos
+
+## Data Display Components
+- Use appropriate components for data visualization
+- Implement loading states for data fetching
+- Handle empty states gracefully
+- Provide clear error messages for failed data fetching

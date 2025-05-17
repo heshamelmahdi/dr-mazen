@@ -1,0 +1,48 @@
+---
+description: 
+globs: "**/prisma/**", "**/*.prisma", "**/db.ts", "**/database.ts"
+alwaysApply: false
+---
+# Database Schema Guidelines
+
+## Prisma Schema
+The database uses the following models:
+
+### User Model
+- Represents both admin and client users
+- Contains authentication information
+- Tracks subscription status for clients
+
+### ProgramVideo Model
+- Represents videos in the nutrition program
+- Contains metadata and file paths
+- Organized by sequence number
+
+### VideoProgress Model
+- Tracks user progress through program videos
+- Records completion status and watch time
+
+### Recipe Model
+- Contains recipe information
+- Supports both YouTube and self-hosted videos
+- Includes nutrition information and categorization
+
+### QAEntry Model
+- Stores Q&A entries created by the admin
+- Supports both text and audio answers
+
+### UserQuestion Model
+- Stores questions submitted by users
+- Tracks whether questions have been answered
+
+## File Storage
+- Video files are stored in AWS S3
+- Use the S3 utility functions for generating presigned URLs
+- Thumbnail images are stored in the thumbnails directory
+- Audio files for Q&A are stored in the qa-audio directory
+
+## Data Operations
+- Always validate user input before database operations
+- Use Prisma's findUnique for fetching single records
+- Use Prisma's findMany with appropriate filters for lists
+- Implement proper pagination for large data sets

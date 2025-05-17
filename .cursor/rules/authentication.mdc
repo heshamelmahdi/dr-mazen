@@ -1,0 +1,32 @@
+---
+description: 
+globs: "**/auth/**", "**/login/**", "**/api/auth/**"
+alwaysApply: false
+---
+# Authentication Guidelines
+
+## NextAuth.js Configuration
+- Use the credentials provider for email/password authentication
+- Store sessions in the database for persistence
+- Include user role and subscription information in the session
+
+## User Roles
+- ADMIN: Can access all features, manage users and content
+- CLIENT: Can access content based on subscription status
+
+## Authentication Flow
+- Admin creates user accounts with email and password
+- Users log in with credentials provided by admin
+- Check subscription status for client users
+- Redirect expired subscriptions to appropriate page
+
+## Security Considerations
+- Hash passwords using bcrypt
+- Implement CSRF protection
+- Use secure HTTP-only cookies for sessions
+- Validate all user input to prevent injection attacks
+
+## Protected Routes
+- Use middleware to protect routes based on authentication
+- Check user role for admin-only routes
+- Verify subscription status for client-only content

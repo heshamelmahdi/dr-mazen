@@ -1,0 +1,36 @@
+---
+description: 
+globs: "**/app/**", "**/pages/**"
+alwaysApply: false
+---
+# Page Structure Guidelines
+
+## Server Components
+- Use server components for data fetching
+- Handle authentication and authorization
+- Redirect unauthenticated users to login
+- Pass data to client components for rendering
+
+## Client Components
+- Use client components for interactive elements
+- Implement state management with React hooks
+- Handle form submissions and user interactions
+- Implement client-side validation
+
+## Error Handling
+- Implement error boundaries for client components
+- Use try/catch blocks for server actions
+- Provide user-friendly error messages
+- Log errors for debugging
+
+## Loading States
+- Implement loading states for data fetching
+- Use Suspense for streaming server components
+- Show skeleton loaders for content
+- Prevent layout shifts during loading
+
+## SEO
+- Use metadata for SEO optimization
+- Implement proper page titles and descriptions
+- Use semantic HTML for better accessibility
+- Ensure proper heading hierarchy

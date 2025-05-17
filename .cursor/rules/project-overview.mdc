@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Nutrition Website Project Guidelines
+
+## Project Architecture
+- This is a Next.js 15 application using the App Router
+- Uses Prisma with PostgreSQL (Supabase) for database operations
+- Authentication via NextAuth.js
+- Styling with TailwindCSS and ShadCN UI components
+- AWS S3 for file storage (videos, images, audio)
+
+## Code Style
+- Use TypeScript for all components and functions
+- Prefer functional components with React hooks
+- Follow the component structure defined in REPO_STRUCTURE.md
+- Separate server and client components appropriately
+- Use server actions for form submissions and data mutations
+- Follow naming conventions: PascalCase for components, camelCase for functions/variables
+
+## Component Organization
+- Server components should handle data fetching and authentication
+- Client components should handle interactivity and state
+- Reusable UI components should be placed in the components directory
+- Page-specific components should be co-located with their pages
+
+## Authentication
+- Two user roles: ADMIN and CLIENT
+- Admin creates user accounts (no self-registration)
+- Check user roles and subscription status in server components
+- Redirect unauthenticated users to login page
+- Redirect unauthorized users to appropriate error pages
+
+## Database Operations
+- Use Prisma Client for all database operations
+- Implement proper error handling for database queries
+- Follow the schema definitions in SCHEMA.md
+- Use transactions for operations that modify multiple tables
+
+## UI/UX Guidelines
+- Follow the design aesthetic from the provided inspiration images
+- Use a clean, minimalist design with an earthy color palette
+- Ensure responsive design for all screen sizes
+- Implement proper loading states and error handling
+- Ensure accessibility compliance (WCAG standards)

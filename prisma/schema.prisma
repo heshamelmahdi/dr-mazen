@@ -12,4 +12,111 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+enum UserRole {
+  ADMIN
+  CLIENT
+}
+
+model User {
+  id                String           @id @default(uuid())
+  email             String           @unique
+  password          String           // Hashed password
+  name              String?
+  role              UserRole         @default(CLIENT)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  subscriptionEndDate DateTime?
+  isActive          Boolean          @default(true)
+  videoProgress     VideoProgress[]
+  userQuestions     UserQuestion[]
+}
+
+model ProgramVideo {
+  id                String           @id @default(uuid())
+  title             String
+  description       String?
+  videoPath         String           // S3 path to video file
+  thumbnailPath     String?          // S3 path to thumbnail image
+  sequenceNumber    Int              // Order in the sequence
+  durationSeconds   Int?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  isActive          Boolean          @default(true)
+  videoProgress     VideoProgress[]
+}
+
+model VideoProgress {
+  id                String           @id @default(uuid())
+  userId            String
+  videoId           String
+  watchedSeconds    Int              @default(0)
+  isCompleted       Boolean          @default(false)
+  lastWatchedAt     DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video             ProgramVideo     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+}
+
+enum RecipeType {
+  YOUTUBE
+  SELF_HOSTED
+}
+
+model Recipe {
+  id                String           @id @default(uuid())
+  title             String
+  description       String?
+  recipeType        RecipeType
+  youtubeUrl        String?          // URL for YouTube videos
+  videoPath         String?          // S3 path for self-hosted videos
+  thumbnailPath     String?          // S3 path to thumbnail image
+  calories          Int?
+  protein           Float?           // in grams
+  carbs             Float?           // in grams
+  fat               Float?           // in grams
+  mealType          String?          // e.g., "Breakfast", "Lunch", "Dinner", "Snack"
+  tags              String[]         // Array of tags
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  isActive          Boolean          @default(true)
+}
+
+enum AnswerType {
+  TEXT
+  AUDIO
+}
+
+model QAEntry {
+  id                String           @id @default(uuid())
+  question          String
+  answerType        AnswerType
+  answerText        String?          // Text answer
+  answerAudioPath   String?          // S3 path to audio file
+  isPrivate         Boolean          @default(false) // If true, only visible to specific users
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  isActive          Boolean          @default(true)
+}
+
+model UserQuestion {
+  id                String           @id @default(uuid())
+  userId            String
+  question          String
+  isAnswered        Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
 }

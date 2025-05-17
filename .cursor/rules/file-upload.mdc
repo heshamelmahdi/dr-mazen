@@ -1,0 +1,29 @@
+---
+description: 
+globs: "**/upload/**", "**/s3/**", "**/aws/**"
+alwaysApply: false
+---
+# File Upload Guidelines
+
+## AWS S3 Integration
+- Use the AWS SDK for S3 operations
+- Generate presigned URLs for secure file access
+- Implement proper error handling for uploads
+- Set appropriate content types and metadata
+
+## File Types
+- Videos: MP4, WebM
+- Images: JPEG, PNG, WebP
+- Audio: MP3, WAV
+
+## Upload Process
+- Validate file size and type on client side
+- Use server actions for secure upload handling
+- Show progress indicators during upload
+- Provide clear success/error feedback
+
+## File Access
+- Generate presigned URLs with appropriate expiration
+- Implement access control based on user role
+- Cache URLs to reduce S3 API calls
+- Handle expired URLs gracefully
