@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# ShadCN UI Component Usage
+
+**Never** paste or hand-write any code that belongs to a ShadCN component.  
+If a component is missing, follow this workflow instead:
+
+1. **Add via CLI**
+npx shadcn@latest add [component]
+
+2. **Import from the generated path**
+import { Button } from "@/components/ui/button";
+
+3. **Extend, but don’t edit the generated source** – wrap it or compose new logic instead.
