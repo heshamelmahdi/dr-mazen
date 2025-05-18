@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     // Add paths that should be protected
-    "/",
+    // "/",
     "/login",
     "/admin/:path*",
     "/program/:path*",
