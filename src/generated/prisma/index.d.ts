@@ -2615,6 +2615,8 @@ export namespace Prisma {
     thumbnailPath: string | null
     sequenceNumber: number | null
     durationSeconds: number | null
+    videoType: string | null
+    youtubeId: string | null
     createdAt: Date | null
     updatedAt: Date | null
     isActive: boolean | null
@@ -2628,6 +2630,8 @@ export namespace Prisma {
     thumbnailPath: string | null
     sequenceNumber: number | null
     durationSeconds: number | null
+    videoType: string | null
+    youtubeId: string | null
     createdAt: Date | null
     updatedAt: Date | null
     isActive: boolean | null
@@ -2641,6 +2645,8 @@ export namespace Prisma {
     thumbnailPath: number
     sequenceNumber: number
     durationSeconds: number
+    videoType: number
+    youtubeId: number
     createdAt: number
     updatedAt: number
     isActive: number
@@ -2666,6 +2672,8 @@ export namespace Prisma {
     thumbnailPath?: true
     sequenceNumber?: true
     durationSeconds?: true
+    videoType?: true
+    youtubeId?: true
     createdAt?: true
     updatedAt?: true
     isActive?: true
@@ -2679,6 +2687,8 @@ export namespace Prisma {
     thumbnailPath?: true
     sequenceNumber?: true
     durationSeconds?: true
+    videoType?: true
+    youtubeId?: true
     createdAt?: true
     updatedAt?: true
     isActive?: true
@@ -2692,6 +2702,8 @@ export namespace Prisma {
     thumbnailPath?: true
     sequenceNumber?: true
     durationSeconds?: true
+    videoType?: true
+    youtubeId?: true
     createdAt?: true
     updatedAt?: true
     isActive?: true
@@ -2792,6 +2804,8 @@ export namespace Prisma {
     thumbnailPath: string | null
     sequenceNumber: number
     durationSeconds: number | null
+    videoType: string | null
+    youtubeId: string | null
     createdAt: Date
     updatedAt: Date
     isActive: boolean
@@ -2824,6 +2838,8 @@ export namespace Prisma {
     thumbnailPath?: boolean
     sequenceNumber?: boolean
     durationSeconds?: boolean
+    videoType?: boolean
+    youtubeId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
@@ -2839,6 +2855,8 @@ export namespace Prisma {
     thumbnailPath?: boolean
     sequenceNumber?: boolean
     durationSeconds?: boolean
+    videoType?: boolean
+    youtubeId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
@@ -2852,6 +2870,8 @@ export namespace Prisma {
     thumbnailPath?: boolean
     sequenceNumber?: boolean
     durationSeconds?: boolean
+    videoType?: boolean
+    youtubeId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
@@ -2865,12 +2885,14 @@ export namespace Prisma {
     thumbnailPath?: boolean
     sequenceNumber?: boolean
     durationSeconds?: boolean
+    videoType?: boolean
+    youtubeId?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     isActive?: boolean
   }
 
-  export type ProgramVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "videoPath" | "thumbnailPath" | "sequenceNumber" | "durationSeconds" | "createdAt" | "updatedAt" | "isActive", ExtArgs["result"]["programVideo"]>
+  export type ProgramVideoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "title" | "description" | "videoPath" | "thumbnailPath" | "sequenceNumber" | "durationSeconds" | "videoType" | "youtubeId" | "createdAt" | "updatedAt" | "isActive", ExtArgs["result"]["programVideo"]>
   export type ProgramVideoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     videoProgress?: boolean | ProgramVideo$videoProgressArgs<ExtArgs>
     _count?: boolean | ProgramVideoCountOutputTypeDefaultArgs<ExtArgs>
@@ -2891,6 +2913,8 @@ export namespace Prisma {
       thumbnailPath: string | null
       sequenceNumber: number
       durationSeconds: number | null
+      videoType: string | null
+      youtubeId: string | null
       createdAt: Date
       updatedAt: Date
       isActive: boolean
@@ -3325,6 +3349,8 @@ export namespace Prisma {
     readonly thumbnailPath: FieldRef<"ProgramVideo", 'String'>
     readonly sequenceNumber: FieldRef<"ProgramVideo", 'Int'>
     readonly durationSeconds: FieldRef<"ProgramVideo", 'Int'>
+    readonly videoType: FieldRef<"ProgramVideo", 'String'>
+    readonly youtubeId: FieldRef<"ProgramVideo", 'String'>
     readonly createdAt: FieldRef<"ProgramVideo", 'DateTime'>
     readonly updatedAt: FieldRef<"ProgramVideo", 'DateTime'>
     readonly isActive: FieldRef<"ProgramVideo", 'Boolean'>
@@ -8232,6 +8258,8 @@ export namespace Prisma {
     thumbnailPath: 'thumbnailPath',
     sequenceNumber: 'sequenceNumber',
     durationSeconds: 'durationSeconds',
+    videoType: 'videoType',
+    youtubeId: 'youtubeId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     isActive: 'isActive'
@@ -8529,6 +8557,8 @@ export namespace Prisma {
     thumbnailPath?: StringNullableFilter<"ProgramVideo"> | string | null
     sequenceNumber?: IntFilter<"ProgramVideo"> | number
     durationSeconds?: IntNullableFilter<"ProgramVideo"> | number | null
+    videoType?: StringNullableFilter<"ProgramVideo"> | string | null
+    youtubeId?: StringNullableFilter<"ProgramVideo"> | string | null
     createdAt?: DateTimeFilter<"ProgramVideo"> | Date | string
     updatedAt?: DateTimeFilter<"ProgramVideo"> | Date | string
     isActive?: BoolFilter<"ProgramVideo"> | boolean
@@ -8543,6 +8573,8 @@ export namespace Prisma {
     thumbnailPath?: SortOrderInput | SortOrder
     sequenceNumber?: SortOrder
     durationSeconds?: SortOrderInput | SortOrder
+    videoType?: SortOrderInput | SortOrder
+    youtubeId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
@@ -8560,6 +8592,8 @@ export namespace Prisma {
     thumbnailPath?: StringNullableFilter<"ProgramVideo"> | string | null
     sequenceNumber?: IntFilter<"ProgramVideo"> | number
     durationSeconds?: IntNullableFilter<"ProgramVideo"> | number | null
+    videoType?: StringNullableFilter<"ProgramVideo"> | string | null
+    youtubeId?: StringNullableFilter<"ProgramVideo"> | string | null
     createdAt?: DateTimeFilter<"ProgramVideo"> | Date | string
     updatedAt?: DateTimeFilter<"ProgramVideo"> | Date | string
     isActive?: BoolFilter<"ProgramVideo"> | boolean
@@ -8574,6 +8608,8 @@ export namespace Prisma {
     thumbnailPath?: SortOrderInput | SortOrder
     sequenceNumber?: SortOrder
     durationSeconds?: SortOrderInput | SortOrder
+    videoType?: SortOrderInput | SortOrder
+    youtubeId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
@@ -8595,6 +8631,8 @@ export namespace Prisma {
     thumbnailPath?: StringNullableWithAggregatesFilter<"ProgramVideo"> | string | null
     sequenceNumber?: IntWithAggregatesFilter<"ProgramVideo"> | number
     durationSeconds?: IntNullableWithAggregatesFilter<"ProgramVideo"> | number | null
+    videoType?: StringNullableWithAggregatesFilter<"ProgramVideo"> | string | null
+    youtubeId?: StringNullableWithAggregatesFilter<"ProgramVideo"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ProgramVideo"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ProgramVideo"> | Date | string
     isActive?: BoolWithAggregatesFilter<"ProgramVideo"> | boolean
@@ -9017,6 +9055,8 @@ export namespace Prisma {
     thumbnailPath?: string | null
     sequenceNumber: number
     durationSeconds?: number | null
+    videoType?: string | null
+    youtubeId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
@@ -9031,6 +9071,8 @@ export namespace Prisma {
     thumbnailPath?: string | null
     sequenceNumber: number
     durationSeconds?: number | null
+    videoType?: string | null
+    youtubeId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
@@ -9045,6 +9087,8 @@ export namespace Prisma {
     thumbnailPath?: NullableStringFieldUpdateOperationsInput | string | null
     sequenceNumber?: IntFieldUpdateOperationsInput | number
     durationSeconds?: NullableIntFieldUpdateOperationsInput | number | null
+    videoType?: NullableStringFieldUpdateOperationsInput | string | null
+    youtubeId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -9059,6 +9103,8 @@ export namespace Prisma {
     thumbnailPath?: NullableStringFieldUpdateOperationsInput | string | null
     sequenceNumber?: IntFieldUpdateOperationsInput | number
     durationSeconds?: NullableIntFieldUpdateOperationsInput | number | null
+    videoType?: NullableStringFieldUpdateOperationsInput | string | null
+    youtubeId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -9073,6 +9119,8 @@ export namespace Prisma {
     thumbnailPath?: string | null
     sequenceNumber: number
     durationSeconds?: number | null
+    videoType?: string | null
+    youtubeId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
@@ -9086,6 +9134,8 @@ export namespace Prisma {
     thumbnailPath?: NullableStringFieldUpdateOperationsInput | string | null
     sequenceNumber?: IntFieldUpdateOperationsInput | number
     durationSeconds?: NullableIntFieldUpdateOperationsInput | number | null
+    videoType?: NullableStringFieldUpdateOperationsInput | string | null
+    youtubeId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -9099,6 +9149,8 @@ export namespace Prisma {
     thumbnailPath?: NullableStringFieldUpdateOperationsInput | string | null
     sequenceNumber?: IntFieldUpdateOperationsInput | number
     durationSeconds?: NullableIntFieldUpdateOperationsInput | number | null
+    videoType?: NullableStringFieldUpdateOperationsInput | string | null
+    youtubeId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -9695,6 +9747,8 @@ export namespace Prisma {
     thumbnailPath?: SortOrder
     sequenceNumber?: SortOrder
     durationSeconds?: SortOrder
+    videoType?: SortOrder
+    youtubeId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
@@ -9713,6 +9767,8 @@ export namespace Prisma {
     thumbnailPath?: SortOrder
     sequenceNumber?: SortOrder
     durationSeconds?: SortOrder
+    videoType?: SortOrder
+    youtubeId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
@@ -9726,6 +9782,8 @@ export namespace Prisma {
     thumbnailPath?: SortOrder
     sequenceNumber?: SortOrder
     durationSeconds?: SortOrder
+    videoType?: SortOrder
+    youtubeId?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     isActive?: SortOrder
@@ -10725,6 +10783,8 @@ export namespace Prisma {
     thumbnailPath?: string | null
     sequenceNumber: number
     durationSeconds?: number | null
+    videoType?: string | null
+    youtubeId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
@@ -10738,6 +10798,8 @@ export namespace Prisma {
     thumbnailPath?: string | null
     sequenceNumber: number
     durationSeconds?: number | null
+    videoType?: string | null
+    youtubeId?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     isActive?: boolean
@@ -10804,6 +10866,8 @@ export namespace Prisma {
     thumbnailPath?: NullableStringFieldUpdateOperationsInput | string | null
     sequenceNumber?: IntFieldUpdateOperationsInput | number
     durationSeconds?: NullableIntFieldUpdateOperationsInput | number | null
+    videoType?: NullableStringFieldUpdateOperationsInput | string | null
+    youtubeId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
@@ -10817,6 +10881,8 @@ export namespace Prisma {
     thumbnailPath?: NullableStringFieldUpdateOperationsInput | string | null
     sequenceNumber?: IntFieldUpdateOperationsInput | number
     durationSeconds?: NullableIntFieldUpdateOperationsInput | number | null
+    videoType?: NullableStringFieldUpdateOperationsInput | string | null
+    youtubeId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean

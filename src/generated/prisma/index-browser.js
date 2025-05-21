@@ -140,6 +140,8 @@ exports.Prisma.ProgramVideoScalarFieldEnum = {
   thumbnailPath: 'thumbnailPath',
   sequenceNumber: 'sequenceNumber',
   durationSeconds: 'durationSeconds',
+  videoType: 'videoType',
+  youtubeId: 'youtubeId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   isActive: 'isActive'
