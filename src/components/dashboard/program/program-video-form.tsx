@@ -21,7 +21,8 @@ import {
   Upload, 
   Film, 
   Image as ImageIcon, 
-  Youtube
+  Youtube,
+  Loader2
 } from "lucide-react";
 
 interface ProgramVideoFormProps {
@@ -54,39 +55,116 @@ export default function ProgramVideoForm({
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(
     video?.thumbnailPath || null
   );
+  // Track uploaded file paths
+  const [videoPath, setVideoPath] = useState<string | null>(video?.videoPath || null);
+  const [thumbnailPath, setThumbnailPath] = useState<string | null>(video?.thumbnailPath || null);
+  // Track upload progress
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [thumbnailUploading, setThumbnailUploading] = useState(false);
+  const [videoUploadProgress, setVideoUploadProgress] = useState(0);
+  const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
   
   const videoInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   
   // Handle video file change
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    if (!file) return;
+    
     setVideoFile(file);
     
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setVideoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setVideoPreview(null);
-    }
+    // Create a preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setVideoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Upload to S3
+    await uploadFileToS3(file, "video");
   };
   
   // Handle thumbnail file change
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    if (!file) return;
+    
     setThumbnailFile(file);
     
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setThumbnailPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setThumbnailPreview(null);
+    // Create a preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setThumbnailPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    
+    // Upload to S3
+    await uploadFileToS3(file, "thumbnail");
+  };
+  
+  // Function to upload file to S3 using presigned URL
+  const uploadFileToS3 = async (file: File, fileCategory: "video" | "thumbnail") => {
+    try {
+      // Set uploading state
+      if (fileCategory === "video") {
+        setVideoUploading(true);
+        setVideoUploadProgress(0);
+      } else {
+        setThumbnailUploading(true);
+        setThumbnailUploadProgress(0);
+      }
+      
+      // 1. Get presigned URL from backend
+      const response = await fetch("/api/upload/presigned-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+          fileCategory,
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to get presigned URL");
+      }
+      
+      const { url, key } = await response.json();
+      
+      // 2. Upload file directly to S3
+      const uploadResponse = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error("Failed to upload file to S3");
+      }
+      
+      // 3. Store the S3 key for form submission
+      if (fileCategory === "video") {
+        setVideoPath(key);
+        toast.success("Video uploaded successfully");
+      } else {
+        setThumbnailPath(key);
+        toast.success("Thumbnail uploaded successfully");
+      }
+    } catch (error) {
+      console.error(`Error uploading ${fileCategory}:`, error);
+      toast.error(`Failed to upload ${fileCategory}`);
+    } finally {
+      // Reset uploading state
+      if (fileCategory === "video") {
+        setVideoUploading(false);
+      } else {
+        setThumbnailUploading(false);
+      }
     }
   };
   
@@ -100,19 +178,25 @@ export default function ProgramVideoForm({
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Check if uploads are still in progress
+    if (videoUploading || thumbnailUploading) {
+      toast.error("Please wait for uploads to complete");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
       const formData = new FormData(e.currentTarget);
       
-      // Add video file to form data if selected
-      if (videoFile && videoType === "SELF_HOSTED") {
-        formData.set("videoFile", videoFile);
+      // Add S3 file paths to form data
+      if (videoPath) {
+        formData.set("videoPath", videoPath);
       }
       
-      // Add thumbnail file to form data if selected
-      if (thumbnailFile) {
-        formData.set("thumbnailFile", thumbnailFile);
+      if (thumbnailPath) {
+        formData.set("thumbnailPath", thumbnailPath);
       }
       
       let result;
@@ -195,10 +279,17 @@ export default function ProgramVideoForm({
                 />
                 
                 <div 
-                  onClick={() => triggerFileInput(videoInputRef)}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => !videoUploading && triggerFileInput(videoInputRef)}
+                  className={`border-2 border-dashed border-gray-300 rounded-lg p-6 ${!videoUploading ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
                 >
-                  {videoPreview ? (
+                  {videoUploading ? (
+                    <div className="flex flex-col items-center justify-center space-y-2">
+                      <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
+                      <p className="text-sm text-emerald-600 font-medium">
+                        Uploading video... Please wait.
+                      </p>
+                    </div>
+                  ) : videoPreview ? (
                     <div className="space-y-2">
                       <video
                         src={videoPreview}
@@ -208,6 +299,11 @@ export default function ProgramVideoForm({
                       <p className="text-sm text-green-600 font-medium">
                         {videoFile?.name} ({videoFile && videoFile.size ? (videoFile.size / 1024 / 1024).toFixed(2) : 0} MB)
                       </p>
+                      {videoPath && (
+                        <p className="text-xs text-gray-500">
+                          Uploaded successfully. Path: {videoPath}
+                        </p>
+                      )}
                     </div>
                   ) : video?.videoPath ? (
                     <div className="space-y-2">
@@ -243,10 +339,17 @@ export default function ProgramVideoForm({
               />
               
               <div 
-                onClick={() => triggerFileInput(thumbnailInputRef)}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => !thumbnailUploading && triggerFileInput(thumbnailInputRef)}
+                className={`border-2 border-dashed border-gray-300 rounded-lg p-6 ${!thumbnailUploading ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
               >
-                {thumbnailPreview ? (
+                {thumbnailUploading ? (
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <Loader2 className="h-8 w-8 text-emerald-500 animate-spin" />
+                    <p className="text-sm text-emerald-600 font-medium">
+                      Uploading thumbnail... Please wait.
+                    </p>
+                  </div>
+                ) : thumbnailPreview ? (
                   <div className="space-y-2">
                     <div className="relative h-40 w-full">
                       <Image
@@ -259,6 +362,11 @@ export default function ProgramVideoForm({
                     {thumbnailFile && (
                       <p className="text-sm text-green-600 font-medium">
                         {thumbnailFile.name} ({(thumbnailFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                    {thumbnailPath && (
+                      <p className="text-xs text-gray-500">
+                        Uploaded successfully. Path: {thumbnailPath}
                       </p>
                     )}
                   </div>
@@ -344,7 +452,10 @@ export default function ProgramVideoForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting || videoUploading || thumbnailUploading}
+        >
           {isSubmitting
             ? editMode
               ? "Updating..."

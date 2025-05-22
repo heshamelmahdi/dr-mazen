@@ -4,6 +4,7 @@ import { PrismaClient } from "@/generated/prisma";
 import { compare } from "bcrypt";
 import { JWT } from "next-auth/jwt";
 import { Session } from "next-auth";
+// import { User } from "next-auth";
 
 const prisma = new PrismaClient();
 
@@ -16,31 +17,46 @@ export const authOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        try {
+          console.log("Login attempt with email:", credentials?.email);
+          
+          if (!credentials?.email || !credentials?.password) {
+            console.log("Missing credentials");
+            return null;
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email }
+          });
+
+          console.log("User found:", !!user);
+          
+          if (!user) {
+            console.log("User not found");
+            return null;
+          }
+
+          console.log("Comparing passwords...");
+          const isPasswordValid = await compare(credentials.password, user.password);
+          console.log("Password valid:", isPasswordValid);
+
+          if (!isPasswordValid) {
+            console.log("Invalid password");
+            return null;
+          }
+
+          console.log("Authentication successful");
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            subscriptionEndDate: user.subscriptionEndDate || undefined
+          };
+        } catch (error) {
+          console.error("Authentication error:", error);
           return null;
         }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email }
-        });
-
-        if (!user) {
-          return null;
-        }
-
-        const isPasswordValid = await compare(credentials.password, user.password);
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          subscriptionEndDate: user.subscriptionEndDate || undefined
-        };
       }
     })
   ],
@@ -54,7 +70,7 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      if (token) {
+      if (token && session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.subscriptionEndDate = token.subscriptionEndDate;
@@ -72,6 +88,7 @@ export const authOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
 };
 
 const handler = NextAuth(authOptions);

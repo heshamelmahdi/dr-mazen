@@ -18,9 +18,6 @@ const envSchema = z.object({
   
   // Application environment
   NODE_ENV: z.enum(["development", "production", "test"]),
-  
-  // Optional: Error reporting service (only required in production)
-  ERROR_REPORTING_API_KEY: z.string().optional(),
 });
 
 // Process environment variables
@@ -28,7 +25,7 @@ const processEnv = {
   AWS_REGION: process.env.AWS_REGION,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
-  AWS_S3_BUCKET_NAME: process.env.AWS_S3_BUCKET_NAME,
+  AWS_S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
   DATABASE_URL: process.env.DATABASE_URL,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,

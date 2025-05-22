@@ -13,6 +13,9 @@ const s3Client = new S3Client({
   },
 });
 
+// Bucket name
+const BUCKET_NAME = env.AWS_S3_BUCKET_NAME || "";
+
 /**
  * Custom error class for S3 operations
  */
@@ -119,4 +122,49 @@ export async function getS3PresignedUrl(key: string, expiresIn = 3600): Promise<
     logger.error('Error generating presigned URL', { key, expiresIn, error: errorMessage }, error as Error);
     throw new S3Error(`Failed to generate URL: ${errorMessage}`, 500);
   }
+}
+
+// Function to generate a unique file name
+export function generateUniqueFileName(originalName: string): string {
+  const extension = originalName.split(".").pop();
+  const random = crypto.randomBytes(16).toString("hex");
+  const timestamp = Date.now();
+  return `${timestamp}-${random}.${extension}`;
+}
+
+// Function to get presigned URL for uploading
+export async function getPresignedUploadUrl(
+  fileName: string,
+  contentType: string,
+  folder: string = "uploads"
+): Promise<{ url: string; key: string }> {
+  const key = `${folder}/${fileName}`;
+  
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    ContentType: contentType,
+  });
+  
+  const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // 1 hour
+  
+  return {
+    url,
+    key,
+  };
+}
+
+// Function to get presigned URL for viewing
+export async function getPresignedViewUrl(key: string): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+  });
+  
+  return await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // 1 hour
+}
+
+// Function to get a public URL for a file
+export function getPublicUrl(key: string): string {
+  return `https://${BUCKET_NAME}.s3.${env.AWS_REGION}.amazonaws.com/${key}`;
 } 

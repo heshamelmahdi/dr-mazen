@@ -25,89 +25,126 @@ async function verifyAdminSession() {
 
 // Create a new program video
 export async function createProgramVideo(formData: FormData) {
-  await verifyAdminSession();
+  // Check authentication
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect("/login");
+  }
+  
+  // Check if user is admin
+  if (session.user.role !== "ADMIN") {
+    redirect("/unauthorized");
+  }
   
   try {
+    // Extract form data
     const title = formData.get("title") as string;
-    const description = formData.get("description") as string | null;
+    const description = formData.get("description") as string;
     const sequenceNumber = parseInt(formData.get("sequenceNumber") as string);
-    const videoFile = formData.get("videoFile") as File;
-    const thumbnailFile = formData.get("thumbnailFile") as File | null;
-    const videoType = formData.get("videoType") as string || "SELF_HOSTED";
+    const videoType = formData.get("videoType") as string;
+    const videoPath = formData.get("videoPath") as string | null;
+    const thumbnailPath = formData.get("thumbnailPath") as string | null;
     const youtubeId = formData.get("youtubeId") as string | null;
+    const durationSeconds = formData.get("durationSeconds") ? 
+      parseInt(formData.get("durationSeconds") as string) : null;
     
-    // Basic validation
-    if (!title || isNaN(sequenceNumber)) {
-      return { success: false, error: "Title and sequence number are required" };
+    // Validate required fields
+    if (!title || !sequenceNumber || !videoType) {
+      return {
+        success: false,
+        error: "Missing required fields: title, sequenceNumber, videoType"
+      };
     }
     
-    if (videoType === "SELF_HOSTED" && (!videoFile || videoFile.size === 0)) {
-      return { success: false, error: "Video file is required for self-hosted videos" };
+    // Validate video source
+    if (videoType === "SELF_HOSTED" && !videoPath) {
+      return {
+        success: false,
+        error: "Self-hosted videos require a video file path"
+      };
     }
     
     if (videoType === "YOUTUBE" && !youtubeId) {
-      return { success: false, error: "YouTube ID is required for YouTube videos" };
-    }
-
-    let videoPath = "";
-    // Upload video if self-hosted
-    if (videoType === "SELF_HOSTED" && videoFile && videoFile.size > 0) {
-      videoPath = await uploadToS3(videoFile, "program-videos");
-    } else if (videoType === "SELF_HOSTED") {
-      return { success: false, error: "Video file is required for self-hosted videos" };
-    }
-    
-    // Upload thumbnail if provided
-    let thumbnailPath = undefined;
-    if (thumbnailFile && thumbnailFile.size > 0) {
-      thumbnailPath = await uploadToS3(thumbnailFile, "thumbnails");
+      return {
+        success: false,
+        error: "YouTube videos require a YouTube ID"
+      };
     }
     
     // Create program video
-    await prisma.programVideo.create({
+    const programVideo = await prisma.programVideo.create({
       data: {
         title,
         description,
         sequenceNumber,
-        videoPath,
-        thumbnailPath,
         videoType,
-        youtubeId: videoType === "YOUTUBE" ? youtubeId : null,
-        isActive: true,
-      },
+        videoPath: videoPath || (videoType === "YOUTUBE" ? `https://youtube.com/watch?v=${youtubeId}` : "placeholder"),
+        thumbnailPath,
+        youtubeId,
+        durationSeconds
+      }
     });
     
     revalidatePath("/dashboard/program");
-    revalidatePath("/program");
-    return { success: true };
+    
+    return {
+      success: true,
+      programVideo
+    };
   } catch (error) {
     console.error("Error creating program video:", error);
-    return { success: false, error: "Failed to create program video" };
+    return {
+      success: false,
+      error: "Failed to create program video"
+    };
   }
 }
 
 // Update an existing program video
 export async function updateProgramVideo(id: string, formData: FormData) {
-  await verifyAdminSession();
+  // Check authentication
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect("/login");
+  }
+  
+  // Check if user is admin
+  if (session.user.role !== "ADMIN") {
+    redirect("/unauthorized");
+  }
   
   try {
+    // Extract form data
     const title = formData.get("title") as string;
-    const description = formData.get("description") as string | null;
+    const description = formData.get("description") as string;
     const sequenceNumber = parseInt(formData.get("sequenceNumber") as string);
-    const videoFile = formData.get("videoFile") as File | null;
-    const thumbnailFile = formData.get("thumbnailFile") as File | null;
     const videoType = formData.get("videoType") as string;
+    const videoPath = formData.get("videoPath") as string | null;
+    const thumbnailPath = formData.get("thumbnailPath") as string | null;
     const youtubeId = formData.get("youtubeId") as string | null;
     const durationSeconds = formData.get("durationSeconds") ? 
-      parseInt(formData.get("durationSeconds") as string) : undefined;
+      parseInt(formData.get("durationSeconds") as string) : null;
     
-    // Basic validation
-    if (!title || isNaN(sequenceNumber)) {
-      return { success: false, error: "Title and sequence number are required" };
+    // Validate required fields
+    if (!title || !sequenceNumber || !videoType) {
+      return {
+        success: false,
+        error: "Missing required fields: title, sequenceNumber, videoType"
+      };
     }
     
-    if (videoType === "YOUTUBE" && !youtubeId) {
-      return { success: false, error: "YouTube ID is required for YouTube videos" };
+    // Get existing video
+    const existingVideo = await prisma.programVideo.findUnique({
+      where: { id }
+    });
+    
+    if (!existingVideo) {
+      return {
+        success: false,
+        error: "Program video not found"
+      };
     }
     
     // Prepare update data
@@ -116,38 +153,37 @@ export async function updateProgramVideo(id: string, formData: FormData) {
       description,
       sequenceNumber,
       videoType,
-      youtubeId: videoType === "YOUTUBE" ? youtubeId : null,
+      youtubeId,
+      durationSeconds
     };
     
-    if (durationSeconds !== undefined) {
-      updateData.durationSeconds = durationSeconds;
-    }
-    
-    // Upload new video if provided
-    if (videoType === "SELF_HOSTED" && videoFile && videoFile.size > 0) {
-      const videoPath = await uploadToS3(videoFile, "program-videos");
+    // Only update paths if new ones are provided
+    if (videoPath) {
       updateData.videoPath = videoPath;
     }
     
-    // Upload new thumbnail if provided
-    if (thumbnailFile && thumbnailFile.size > 0) {
-      const thumbnailPath = await uploadToS3(thumbnailFile, "thumbnails");
+    if (thumbnailPath) {
       updateData.thumbnailPath = thumbnailPath;
     }
     
     // Update program video
-    await prisma.programVideo.update({
+    const programVideo = await prisma.programVideo.update({
       where: { id },
-      data: updateData,
+      data: updateData
     });
     
     revalidatePath("/dashboard/program");
-    revalidatePath("/program");
-    revalidatePath(`/program/${id}`);
-    return { success: true };
+    
+    return {
+      success: true,
+      programVideo
+    };
   } catch (error) {
     console.error("Error updating program video:", error);
-    return { success: false, error: "Failed to update program video" };
+    return {
+      success: false,
+      error: "Failed to update program video"
+    };
   }
 }
 

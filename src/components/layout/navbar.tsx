@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const navigation = [
   { name: "Program", href: "/program" },
   { name: "Recipes", href: "/recipes" },
-  { name: "Q&A", href: "/qa" },
+  { name: "Q&A", href: "/qna" },
 ];
 
 export function Navbar() {
@@ -44,12 +44,21 @@ export function Navbar() {
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {session ? (
               <div className="flex items-center space-x-4">
-                <Link
-                  href="/profile"
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  Profile
-                </Link>
+                {session.user.role === "ADMIN" ? (
+                  <Link
+                    href="/dashboard"
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/profile"
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Profile
+                  </Link>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => signOut()}
