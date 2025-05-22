@@ -1,17 +1,13 @@
 import { getServerSession } from "next-auth/next";
 import { redirect, notFound } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import RecipeForm from "@/components/dashboard/recipes/recipe-form";
 
-interface EditRecipePageProps {
-  params: {
-    id: string;
-  };
-}
+type Params = Promise<{ id: string }>;
 
-export default async function EditRecipePage({ params }: EditRecipePageProps) {
-  const { id } = params;
+export default async function EditRecipePage({ params }: { params: Params }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login

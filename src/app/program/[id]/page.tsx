@@ -2,18 +2,14 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getS3PresignedUrl } from "@/lib/s3";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import VideoPlayer from "@/components/program/video-player";
 
-interface VideoPageProps {
-  params: {
-    id: string;
-  };
-}
+type Params = Promise<{ id: string }>;
 
-export default async function VideoPage({ params }: VideoPageProps) {
+export default async function VideoPage({ params }: { params: Params }) {
   // Await params before using its properties
-  const { id } = await Promise.resolve(params);
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login

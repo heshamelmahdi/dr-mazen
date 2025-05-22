@@ -1,17 +1,13 @@
 import { getServerSession } from "next-auth/next";
 import { redirect, notFound } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import ProgramVideoForm from "@/components/dashboard/program/program-video-form";
 
-interface EditVideoPageProps {
-  params: {
-    id: string;
-  };
-}
+type Params = Promise<{ id: string }>;
 
-export default async function EditProgramVideoPage({ params }: EditVideoPageProps) {
-  const { id } = params;
+export default async function EditProgramVideoPage({ params }: { params: Params }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login

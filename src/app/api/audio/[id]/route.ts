@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getS3PresignedUrl } from "@/lib/s3";
 
+type Params = Promise<{ id: string }>;
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Params }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,7 +21,7 @@ export async function GET(
       );
     }
     
-    const { id } = await Promise.resolve(params);
+    const { id } = await params;
     
     // Find the Q&A entry
     const qaEntry = await prisma.qAEntry.findUnique({

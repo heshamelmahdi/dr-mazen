@@ -32,6 +32,7 @@ class Logger {
   
   /**
    * Sends log to error reporting service in production
+   * Currently only logs to console as no external service is configured
    */
   private sendToErrorReporting(level: LogLevel, message: string, details?: LogDetails, error?: Error) {
     // Only send errors and warnings to error reporting in production
@@ -39,18 +40,10 @@ class Logger {
       return;
     }
     
-    // Here you would implement integration with an error reporting service
-    // Example: Sentry, LogRocket, etc.
-    if (env.ERROR_REPORTING_API_KEY) {
-      try {
-        // This is where you would call your error reporting service's API
-        // Example: Sentry.captureException(error, { extra: { message, ...details } });
-        console.info(`[${level.toUpperCase()}] Would report to error service: ${message}`);
-      } catch (e) {
-        // Fallback to console if error reporting fails
-        console.error('Failed to send to error reporting service:', e);
-      }
-    }
+    // For now, just log to console in production
+    console.info(`[${level.toUpperCase()}] Production log: ${message}`);
+    
+    // External error reporting can be added here in the future
   }
   
   /**

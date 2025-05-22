@@ -2,13 +2,16 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import RecipesContent from "@/components/recipes/recipes-content";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
+
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function RecipesPage({
   searchParams
 }: {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: SearchParams
 }) {
+  const resolvedParams = await searchParams;
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login
@@ -26,15 +29,15 @@ export default async function RecipesPage({
   }
   
   // Extract filter parameters
-  const mealType = searchParams.mealType as string | undefined;
-  const tags = searchParams.tags ? 
-    Array.isArray(searchParams.tags) ? 
-      searchParams.tags : [searchParams.tags] 
+  const mealType = resolvedParams.mealType as string | undefined;
+  const tags = resolvedParams.tags ? 
+    Array.isArray(resolvedParams.tags) ? 
+      resolvedParams.tags : [resolvedParams.tags] 
     : undefined;
-  const minCalories = searchParams.minCalories ? 
-    parseInt(searchParams.minCalories as string) : undefined;
-  const maxCalories = searchParams.maxCalories ? 
-    parseInt(searchParams.maxCalories as string) : undefined;
+  const minCalories = resolvedParams.minCalories ? 
+    parseInt(resolvedParams.minCalories as string) : undefined;
+  const maxCalories = resolvedParams.maxCalories ? 
+    parseInt(resolvedParams.maxCalories as string) : undefined;
   
   // Build query filters
   const filters: any = { isActive: true };

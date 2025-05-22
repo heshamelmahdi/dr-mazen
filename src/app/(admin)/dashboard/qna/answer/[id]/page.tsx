@@ -1,16 +1,12 @@
 import { getServerSession } from "next-auth/next";
 import { redirect, notFound } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import QAAnswerForm from "@/components/dashboard/qa/qa-answer-form";
 
-interface AnswerUserQuestionPageProps {
-  params: {
-    id: string;
-  };
-}
+type Params = Promise<{ id: string }>;
 
-export default async function AnswerUserQuestionPage({ params }: AnswerUserQuestionPageProps) {
+export default async function AnswerUserQuestionPage({ params }: { params: Params }) {
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login
@@ -24,7 +20,7 @@ export default async function AnswerUserQuestionPage({ params }: AnswerUserQuest
   }
   
   // Get the question ID from params
-  const { id } = await Promise.resolve(params);
+  const { id } = await params;
   
   // Fetch the question
   const question = await prisma.userQuestion.findUnique({

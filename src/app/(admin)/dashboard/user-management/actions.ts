@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { hash } from "bcrypt";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 // Create a new user

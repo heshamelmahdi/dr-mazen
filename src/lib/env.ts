@@ -30,7 +30,6 @@ const processEnv = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   NODE_ENV: process.env.NODE_ENV,
-  ERROR_REPORTING_API_KEY: process.env.ERROR_REPORTING_API_KEY,
 };
 
 // Validate environment variables
