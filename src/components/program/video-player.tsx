@@ -39,6 +39,7 @@ export default function VideoPlayer({
   const [duration, setDuration] = useState(video.durationSeconds || 0);
   const [isCompleted, setIsCompleted] = useState(initialIsCompleted);
   const [showControls, setShowControls] = useState(true);
+  const [progressMarked, setProgressMarked] = useState(initialIsCompleted);
   
   const isYouTube = video.videoType === "YOUTUBE" && video.youtubeId;
   
@@ -60,10 +61,25 @@ export default function VideoPlayer({
     
     if (playerState === 1) {
       setIsPlaying(true);
+      markVideoAsWatched();
     } else if (playerState === 2) {
       setIsPlaying(false);
     } else if (playerState === 0) {
-      handleEnded();
+      setIsPlaying(false);
+      setIsCompleted(true);
+    }
+  };
+  
+  // Mark video as watched once
+  const markVideoAsWatched = async () => {
+    if (!progressMarked) {
+      try {
+        await updateVideoProgress(userId, video.id, true);
+        setProgressMarked(true);
+        setIsCompleted(true);
+      } catch (error) {
+        console.error("Failed to mark video as watched:", error);
+      }
     }
   };
   
@@ -74,11 +90,18 @@ export default function VideoPlayer({
     }
   }, [initialProgress, isYouTube]);
   
-  // Update progress periodically
+  // Mark video as watched when playback starts
+  useEffect(() => {
+    if (isPlaying && !progressMarked) {
+      markVideoAsWatched();
+    }
+  }, [isPlaying, progressMarked]);
+  
+  // Track current time for UI without sending to server
   useEffect(() => {
     if (!isPlaying) return;
     
-    const interval = setInterval(async () => {
+    const interval = setInterval(() => {
       let currentTime = 0;
       
       if (isYouTube && youtubePlayer) {
@@ -88,22 +111,10 @@ export default function VideoPlayer({
       }
       
       setCurrentTime(currentTime);
-      
-      // Update progress in database every 5 seconds
-      if (currentTime % 5 === 0) {
-        await updateVideoProgress(userId, video.id, currentTime, isCompleted);
-      }
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [isPlaying, userId, video.id, isCompleted, isYouTube, youtubePlayer]);
-  
-  // Handle video completion
-  const handleEnded = async () => {
-    setIsPlaying(false);
-    setIsCompleted(true);
-    await updateVideoProgress(userId, video.id, duration, true);
-  };
+  }, [isPlaying, isYouTube, youtubePlayer]);
   
   // Handle self-hosted video metadata loaded
   const handleLoadedMetadata = () => {
@@ -169,7 +180,7 @@ export default function VideoPlayer({
                 playsInline
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
-                onEnded={handleEnded}
+                onEnded={() => setIsCompleted(true)}
                 onLoadedMetadata={handleLoadedMetadata}
                 onTimeUpdate={() => videoRef.current && setCurrentTime(Math.floor(videoRef.current.currentTime))}
                 onClick={togglePlay}

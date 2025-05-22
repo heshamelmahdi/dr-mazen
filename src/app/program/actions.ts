@@ -6,33 +6,36 @@ import { revalidatePath } from "next/cache";
 export async function updateVideoProgress(
   userId: string,
   videoId: string,
-  watchedSeconds: number,
-  isCompleted: boolean
+  skipRevalidation: boolean = false
 ) {
   try {
-    await prisma.videoProgress.upsert({
+    // Check if we already have a record
+    const existingProgress = await prisma.videoProgress.findUnique({
       where: {
         userId_videoId: {
           userId,
           videoId
         }
       },
-      update: {
-        watchedSeconds,
-        isCompleted,
-        lastWatchedAt: new Date()
-      },
-      create: {
-        userId,
-        videoId,
-        watchedSeconds,
-        isCompleted,
-        lastWatchedAt: new Date()
-      }
     });
     
-    revalidatePath(`/program/${videoId}`);
-    revalidatePath('/program');
+    // Only create a record if one doesn't exist
+    if (!existingProgress) {
+      await prisma.videoProgress.create({
+        data: {
+          userId,
+          videoId,
+          watchedSeconds: 0,      // We keep this field but don't use it
+          isCompleted: true,      // Mark as completed immediately
+          lastWatchedAt: new Date()
+        }
+      });
+      
+      // Revalidate the program list page to update UI, but only if not skipped
+      if (!skipRevalidation) {
+        revalidatePath('/program');
+      }
+    }
     
     return { success: true };
   } catch (error) {

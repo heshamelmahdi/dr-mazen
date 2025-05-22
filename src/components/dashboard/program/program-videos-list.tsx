@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ProgramVideo } from "@/generated/prisma";
@@ -51,6 +51,38 @@ export default function ProgramVideosList({ videos }: ProgramVideosListProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<ProgramVideo | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
+  const [loadingThumbnails, setLoadingThumbnails] = useState(true);
+
+  // Fetch presigned URLs for all thumbnails via API
+  useEffect(() => {
+    const fetchPresignedUrls = async () => {
+      setLoadingThumbnails(true);
+      const urlMap: Record<string, string> = {};
+      
+      for (const video of videos) {
+        if (video.thumbnailPath) {
+          try {
+            const response = await fetch(`/api/thumbnails/presigned-url?key=${encodeURIComponent(video.thumbnailPath)}`);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            urlMap[video.id] = data.url;
+          } catch (error) {
+            console.error(`Failed to get presigned URL for ${video.id}:`, error);
+          }
+        }
+      }
+      
+      setThumbnailUrls(urlMap);
+      setLoadingThumbnails(false);
+    };
+    
+    fetchPresignedUrls();
+  }, [videos]);
 
   // Handle video sequence change (move up or down)
   const handleSequenceChange = async (videoId: string, currentSeq: number, direction: "up" | "down") => {
@@ -183,12 +215,22 @@ export default function ProgramVideosList({ videos }: ProgramVideosListProps) {
                         <div className="flex items-center space-x-3">
                           <div className="h-12 w-16 bg-gray-100 relative rounded">
                             {video.thumbnailPath ? (
-                              <Image
-                                src={video.thumbnailPath}
-                                alt={video.title}
-                                fill
-                                className="object-cover rounded"
-                              />
+                              loadingThumbnails ? (
+                                <div className="flex items-center justify-center h-full">
+                                  <span className="text-xs text-gray-400">Loading...</span>
+                                </div>
+                              ) : thumbnailUrls[video.id] ? (
+                                <Image
+                                  src={thumbnailUrls[video.id]}
+                                  alt={video.title}
+                                  fill
+                                  className="object-cover rounded"
+                                />
+                              ) : (
+                                <div className="flex items-center justify-center h-full">
+                                  <span className="text-xs text-gray-400">Error</span>
+                                </div>
+                              )
                             ) : (
                               <div className="flex items-center justify-center h-full">
                                 <span className="text-xs text-gray-400">No thumb</span>

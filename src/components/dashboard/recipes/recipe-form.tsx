@@ -479,7 +479,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="NONE">None</SelectItem>
                           {MEAL_TYPES.map((type) => (
                             <SelectItem key={type} value={type}>
                               {type}

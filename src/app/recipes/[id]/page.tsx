@@ -13,7 +13,7 @@ interface RecipePageProps {
 }
 
 export default async function RecipePage({ params }: RecipePageProps) {
-  const { id } = params;
+  const { id } = await Promise.resolve(params);
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login

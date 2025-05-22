@@ -155,9 +155,13 @@ export default function ProgramVideoForm({
         setThumbnailPath(key);
         toast.success("Thumbnail uploaded successfully");
       }
+      
+      // Return the key for immediate use
+      return key;
     } catch (error) {
       console.error(`Error uploading ${fileCategory}:`, error);
       toast.error(`Failed to upload ${fileCategory}`);
+      return null;
     } finally {
       // Reset uploading state
       if (fileCategory === "video") {
@@ -195,7 +199,25 @@ export default function ProgramVideoForm({
         formData.set("videoPath", videoPath);
       }
       
-      if (thumbnailPath) {
+      // If video was uploaded but no thumbnail, extract the first frame
+      if (videoPath && !thumbnailPath && videoType === "SELF_HOSTED" && videoFile) {
+        try {
+          toast.info("No thumbnail provided, extracting from video...");
+          const thumbnailBlob = await extractFirstFrameFromVideo(videoFile);
+          const thumbnailFile = new File([thumbnailBlob], `thumbnail-${Date.now()}.jpg`, { type: 'image/jpeg' });
+          
+          // Upload the thumbnail to S3 and get the key directly
+          const thumbnailKey = await uploadFileToS3(thumbnailFile, "thumbnail");
+          
+          // Use the returned key directly instead of depending on state update
+          if (thumbnailKey) {
+            formData.set("thumbnailPath", thumbnailKey);
+          }
+        } catch (error) {
+          console.error("Error extracting thumbnail from video:", error);
+          toast.error("Failed to extract thumbnail from video");
+        }
+      } else if (thumbnailPath) {
         formData.set("thumbnailPath", thumbnailPath);
       }
       
@@ -225,6 +247,55 @@ export default function ProgramVideoForm({
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Function to extract the first frame from a video file
+  const extractFirstFrameFromVideo = (videoFile: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      
+      video.onloadeddata = () => {
+        try {
+          // Seek to the first frame
+          video.currentTime = 0;
+          
+          // Wait for the video to be seeked
+          video.onseeked = () => {
+            // Create a canvas and draw the video frame
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              reject(new Error('Failed to get canvas context'));
+              return;
+            }
+            
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert the canvas to a blob
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Failed to convert canvas to blob'));
+              }
+            }, 'image/jpeg', 0.9);
+          };
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      video.onerror = () => {
+        reject(new Error('Error loading video'));
+      };
+      
+      // Set the video source to the file
+      video.src = URL.createObjectURL(videoFile);
+    });
   };
   
   return (

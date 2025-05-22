@@ -32,14 +32,14 @@ export default async function ProgramPage() {
     where: { userId: session.user.id },
   });
   
-  // Map progress to videos
+  // Map progress to videos (now just tracking if video was watched)
   const videosWithProgress = videos.map((video: any) => {
     const videoProgress = progress.find((p: any) => p.videoId === video.id);
     return {
       ...video,
       progress: videoProgress ? {
-        watchedSeconds: videoProgress.watchedSeconds,
-        isCompleted: videoProgress.isCompleted,
+        watchedSeconds: 0,
+        isCompleted: true,
         lastWatchedAt: videoProgress.lastWatchedAt
       } : {
         watchedSeconds: 0,

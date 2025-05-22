@@ -12,7 +12,8 @@ interface VideoPageProps {
 }
 
 export default async function VideoPage({ params }: VideoPageProps) {
-  const { id } = params;
+  // Await params before using its properties
+  const { id } = await Promise.resolve(params);
   const session = await getServerSession(authOptions);
   
   // Redirect unauthenticated users to login
@@ -80,8 +81,8 @@ export default async function VideoPage({ params }: VideoPageProps) {
         youtubeId: video.youtubeId
       }}
       videoUrl={videoUrl}
-      initialProgress={progress?.watchedSeconds || 0}
-      isCompleted={progress?.isCompleted || false}
+      initialProgress={0}
+      isCompleted={!!progress}
       userId={session.user.id}
       nextVideoId={nextVideo?.id || null}
     />

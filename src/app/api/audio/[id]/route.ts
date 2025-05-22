@@ -19,7 +19,7 @@ export async function GET(
       );
     }
     
-    const id = params.id;
+    const { id } = await Promise.resolve(params);
     
     // Find the Q&A entry
     const qaEntry = await prisma.qAEntry.findUnique({

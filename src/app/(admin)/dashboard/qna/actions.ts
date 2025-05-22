@@ -19,7 +19,7 @@ export async function createQAEntry(formData: FormData) {
     const question = formData.get("question") as string;
     const answerType = formData.get("answerType") as string;
     const answerText = formData.get("answerText") as string;
-    const audioFile = formData.get("audioFile") as File;
+    const audioKey = formData.get("audioKey") as string; // S3 key for uploaded audio
     const isPrivate = formData.get("isPrivate") === "true";
     
     // Validate inputs
@@ -31,7 +31,7 @@ export async function createQAEntry(formData: FormData) {
       return { success: false, error: "Answer text is required for text answers" };
     }
     
-    if (answerType === "AUDIO" && (!audioFile || audioFile.size === 0)) {
+    if (answerType === "AUDIO" && !audioKey) {
       return { success: false, error: "Audio file is required for audio answers" };
     }
     
@@ -40,21 +40,17 @@ export async function createQAEntry(formData: FormData) {
       question,
       answerType: answerType as "TEXT" | "AUDIO",
       answerText: answerType === "TEXT" ? answerText : null,
+      answerAudioPath: answerType === "AUDIO" ? audioKey : null,
       isPrivate,
       isActive: true
     };
-    
-    // Upload audio if provided
-    if (answerType === "AUDIO" && audioFile && audioFile.size > 0) {
-      qaData.answerAudioPath = await uploadToS3(audioFile, "qa-audio");
-    }
     
     // Create Q&A entry
     await prisma.qAEntry.create({
       data: qaData
     });
     
-    revalidatePath("/dashboard/qa");
+    revalidatePath("/dashboard/qna");
     return { success: true };
   } catch (error) {
     console.error("Error creating Q&A entry:", error);
@@ -75,7 +71,8 @@ export async function updateQAEntry(id: string, formData: FormData) {
     const question = formData.get("question") as string;
     const answerType = formData.get("answerType") as string;
     const answerText = formData.get("answerText") as string;
-    const audioFile = formData.get("audioFile") as File;
+    const audioKey = formData.get("audioKey") as string; // S3 key for uploaded audio
+    const keepExistingAudio = formData.get("keepExistingAudio") === "true";
     const isPrivate = formData.get("isPrivate") === "true";
     
     // Validate inputs
@@ -87,7 +84,7 @@ export async function updateQAEntry(id: string, formData: FormData) {
       return { success: false, error: "Answer text is required for text answers" };
     }
     
-    // Get the existing entry to check for previous audio file
+    // Get existing entry to check for file changes
     const existingEntry = await prisma.qAEntry.findUnique({
       where: { id }
     });
@@ -101,28 +98,37 @@ export async function updateQAEntry(id: string, formData: FormData) {
       question,
       answerType: answerType as "TEXT" | "AUDIO",
       answerText: answerType === "TEXT" ? answerText : null,
-      isPrivate
+      isPrivate,
     };
     
-    // Handle audio file changes
+    // Handle audio
     if (answerType === "AUDIO") {
-      if (audioFile && audioFile.size > 0) {
-        // Delete old audio file if exists
-        if (existingEntry.answerAudioPath) {
-          await deleteFromS3(existingEntry.answerAudioPath);
+      if (audioKey) {
+        // New audio uploaded, delete old one if exists
+        if (existingEntry.answerAudioPath && existingEntry.answerAudioPath !== audioKey) {
+          try {
+            await deleteFromS3(existingEntry.answerAudioPath);
+          } catch (error) {
+            console.error("Error deleting old audio file:", error);
+          }
         }
-        // Upload new audio file
-        updateData.answerAudioPath = await uploadToS3(audioFile, "qa-audio");
-      } else if (!existingEntry.answerAudioPath) {
+        updateData.answerAudioPath = audioKey;
+      } else if (keepExistingAudio && existingEntry.answerAudioPath) {
+        // Keep existing audio
+        updateData.answerAudioPath = existingEntry.answerAudioPath;
+      } else {
         return { success: false, error: "Audio file is required for audio answers" };
       }
-      // If no new file is uploaded but there's an existing audio file, keep using that
     } else {
-      // If switching from audio to text, delete the audio file
+      // If switching from audio to text, remove audio path and delete file
       if (existingEntry.answerAudioPath) {
-        await deleteFromS3(existingEntry.answerAudioPath);
-        updateData.answerAudioPath = null;
+        try {
+          await deleteFromS3(existingEntry.answerAudioPath);
+        } catch (error) {
+          console.error("Error deleting old audio file:", error);
+        }
       }
+      updateData.answerAudioPath = null;
     }
     
     // Update Q&A entry
@@ -131,7 +137,7 @@ export async function updateQAEntry(id: string, formData: FormData) {
       data: updateData
     });
     
-    revalidatePath("/dashboard/qa");
+    revalidatePath("/dashboard/qna");
     return { success: true };
   } catch (error) {
     console.error("Error updating Q&A entry:", error);
@@ -154,7 +160,7 @@ export async function toggleQAVisibility(id: string, isActive: boolean) {
       data: { isActive }
     });
     
-    revalidatePath("/dashboard/qa");
+    revalidatePath("/dashboard/qna");
     return { success: true };
   } catch (error) {
     console.error("Error toggling Q&A visibility:", error);
@@ -191,7 +197,7 @@ export async function deleteQAEntry(id: string) {
       where: { id }
     });
     
-    revalidatePath("/dashboard/qa");
+    revalidatePath("/dashboard/qna");
     return { success: true };
   } catch (error) {
     console.error("Error deleting Q&A entry:", error);
@@ -211,7 +217,7 @@ export async function answerUserQuestion(questionId: string, formData: FormData)
     
     const answerType = formData.get("answerType") as string;
     const answerText = formData.get("answerText") as string;
-    const audioFile = formData.get("audioFile") as File;
+    const audioKey = formData.get("audioKey") as string;
     const isPrivate = formData.get("isPrivate") === "true";
     
     // Validate inputs
@@ -223,7 +229,7 @@ export async function answerUserQuestion(questionId: string, formData: FormData)
       return { success: false, error: "Answer text is required for text answers" };
     }
     
-    if (answerType === "AUDIO" && (!audioFile || audioFile.size === 0)) {
+    if (answerType === "AUDIO" && !audioKey) {
       return { success: false, error: "Audio file is required for audio answers" };
     }
     
@@ -241,27 +247,23 @@ export async function answerUserQuestion(questionId: string, formData: FormData)
       question: userQuestion.question,
       answerType: answerType as "TEXT" | "AUDIO",
       answerText: answerType === "TEXT" ? answerText : null,
+      answerAudioPath: answerType === "AUDIO" ? audioKey : null,
       isPrivate,
       isActive: true
     };
-    
-    // Upload audio if provided
-    if (answerType === "AUDIO" && audioFile && audioFile.size > 0) {
-      qaData.answerAudioPath = await uploadToS3(audioFile, "qa-audio");
-    }
     
     // Create Q&A entry
     await prisma.qAEntry.create({
       data: qaData
     });
     
-    // Mark user question as answered
+    // Mark the user question as answered
     await prisma.userQuestion.update({
       where: { id: questionId },
       data: { isAnswered: true }
     });
     
-    revalidatePath("/dashboard/qa");
+    revalidatePath("/dashboard/qna");
     return { success: true };
   } catch (error) {
     console.error("Error answering user question:", error);
@@ -284,7 +286,7 @@ export async function deleteUserQuestion(id: string) {
       where: { id }
     });
     
-    revalidatePath("/dashboard/qa");
+    revalidatePath("/dashboard/qna");
     return { success: true };
   } catch (error) {
     console.error("Error deleting user question:", error);

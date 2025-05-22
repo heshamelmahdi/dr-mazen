@@ -3,15 +3,17 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { formatTime } from "@/lib/utils/date-utils";
+import { toast } from "sonner";
 
 interface AudioRecorderProps {
-  onAudioCapture: (file: File) => void;
+  onAudioCaptured: (key: string) => void;
 }
 
-export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
+export default function AudioRecorder({ onAudioCaptured }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioURL, setAudioURL] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,13 +52,6 @@ export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
         const url = URL.createObjectURL(audioBlob);
         setAudioURL(url);
         
-        // Create a File object from the Blob
-        const fileName = `recorded-audio-${new Date().toISOString()}.mp3`;
-        const audioFile = new File([audioBlob], fileName, { type: 'audio/mpeg' });
-        
-        // Pass the file to parent component
-        onAudioCapture(audioFile);
-        
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
       };
@@ -72,7 +67,7 @@ export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
       }, 1000);
     } catch (error) {
       console.error("Error starting recording:", error);
-      alert("Could not access microphone. Please ensure you have microphone permissions enabled.");
+      toast.error("Could not access microphone. Please ensure you have microphone permissions enabled.");
     }
   };
   
@@ -88,6 +83,63 @@ export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
     }
   };
   
+  const uploadAudio = async () => {
+    if (!audioURL) return;
+    
+    try {
+      setIsUploading(true);
+      
+      // Create a blob from the audio URL
+      const response = await fetch(audioURL);
+      const audioBlob = await response.blob();
+      
+      // Create a File object
+      const fileName = `recorded-audio-${new Date().toISOString()}.mp3`;
+      const file = new File([audioBlob], fileName, { type: 'audio/mpeg' });
+      
+      // Get presigned URL
+      const presignedRes = await fetch('/api/audio/presigned-upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+        }),
+      });
+      
+      if (!presignedRes.ok) {
+        const error = await presignedRes.json();
+        throw new Error(error.message || 'Failed to get presigned URL');
+      }
+      
+      const { url, key } = await presignedRes.json();
+      
+      // Upload to S3 using presigned URL
+      const uploadRes = await fetch(url, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+      
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload audio file');
+      }
+      
+      // Notify parent component about the successful upload
+      onAudioCaptured(key);
+      toast.success('Audio uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading audio:', error);
+      toast.error('Failed to upload audio');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-4">
@@ -97,6 +149,7 @@ export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
             onClick={startRecording} 
             variant="destructive"
             className="flex items-center"
+            disabled={isUploading}
           >
             <span className="mr-2">●</span>
             Start Recording
@@ -107,6 +160,7 @@ export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
             onClick={stopRecording} 
             variant="outline" 
             className="flex items-center"
+            disabled={isUploading}
           >
             <span className="mr-2">■</span>
             Stop Recording
@@ -128,6 +182,17 @@ export default function AudioRecorder({ onAudioCapture }: AudioRecorderProps) {
             <source src={audioURL} type="audio/mpeg" />
             Your browser does not support the audio element.
           </audio>
+          
+          <div className="mt-3">
+            <Button 
+              type="button" 
+              onClick={uploadAudio}
+              disabled={isUploading}
+              className="w-full"
+            >
+              {isUploading ? 'Uploading...' : 'Use This Recording'}
+            </Button>
+          </div>
         </div>
       )}
     </div>

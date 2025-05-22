@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { deleteQAEntry, toggleQAVisibility } from "@/app/dashboard/qa/actions";
+import { deleteQAEntry, toggleQAVisibility } from "@/app/(admin)/dashboard/qna/actions";
 
 interface QAEntry {
   id: string;
@@ -63,7 +63,7 @@ export default function QAEntriesList({ entries }: QAEntriesListProps) {
     return (
       <div className="text-center py-10">
         <p className="text-gray-500 mb-4">No Q&A entries found</p>
-        <Link href="/dashboard/qa/new">
+        <Link href="/dashboard/qna/new">
           <Button>Create Your First Q&A</Button>
         </Link>
       </div>
@@ -144,7 +144,7 @@ export default function QAEntriesList({ entries }: QAEntriesListProps) {
               </Button>
               
               <div className="space-x-2">
-                <Link href={`/dashboard/qa/edit/${entry.id}`}>
+                <Link href={`/dashboard/qna/edit/${entry.id}`}>
                   <Button variant="secondary" size="sm">
                     Edit
                   </Button>

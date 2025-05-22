@@ -23,9 +23,12 @@ export default async function AnswerUserQuestionPage({ params }: AnswerUserQuest
     redirect("/unauthorized");
   }
   
+  // Get the question ID from params
+  const { id } = await Promise.resolve(params);
+  
   // Fetch the question
   const question = await prisma.userQuestion.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { user: true }
   });
   
@@ -47,7 +50,7 @@ export default async function AnswerUserQuestionPage({ params }: AnswerUserQuest
         <p className="text-lg font-medium">{question.question}</p>
       </div>
       
-      <QAAnswerForm questionId={params.id} userQuestion={question.question} />
+      <QAAnswerForm questionId={id} userQuestion={question.question} />
     </div>
   );
 } 

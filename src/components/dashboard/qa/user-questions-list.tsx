@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { deleteUserQuestion } from "@/app/dashboard/qa/actions";
+import { deleteUserQuestion } from "@/app/(admin)/dashboard/qna/actions";
 
 interface User {
   id: string;
@@ -92,7 +92,7 @@ export default function UserQuestionsList({ questions }: UserQuestionsListProps)
               </Button>
               
               {!question.isAnswered && (
-                <Link href={`/dashboard/qa/answer/${question.id}`}>
+                <Link href={`/dashboard/qna/answer/${question.id}`}>
                   <Button variant="default" size="sm">
                     Answer Question
                   </Button>

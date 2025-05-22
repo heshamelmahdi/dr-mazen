@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { formatDuration } from "@/lib/utils/date-utils";
 
@@ -24,6 +25,36 @@ interface VideoCardProps {
 }
 
 export default function VideoCard({ video, onClick }: VideoCardProps) {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch presigned URL for thumbnail
+  useEffect(() => {
+    const fetchThumbnailUrl = async () => {
+      if (video.thumbnailPath) {
+        try {
+          setIsLoading(true);
+          const response = await fetch(`/api/thumbnails/presigned-url?key=${encodeURIComponent(video.thumbnailPath)}`);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          setThumbnailUrl(data.url);
+        } catch (error) {
+          console.error(`Failed to get presigned URL for thumbnail:`, error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchThumbnailUrl();
+  }, [video.thumbnailPath]);
+  
   // Calculate progress percentage
   const progressPercentage = video.durationSeconds 
     ? Math.min(100, Math.round((video.progress.watchedSeconds / video.durationSeconds) * 100))
@@ -39,12 +70,22 @@ export default function VideoCard({ video, onClick }: VideoCardProps) {
       <div className="flex flex-col md:flex-row">
         <div className="md:w-1/3 relative h-48 md:h-auto">
           {video.thumbnailPath ? (
-            <Image 
-              src={video.thumbnailPath} 
-              alt={video.title} 
-              fill 
-              className="object-cover"
-            />
+            isLoading ? (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400">Loading...</span>
+              </div>
+            ) : thumbnailUrl ? (
+              <Image 
+                src={thumbnailUrl} 
+                alt={video.title} 
+                fill 
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400">Error loading thumbnail</span>
+              </div>
+            )
           ) : (
             <div className="w-full h-full bg-gray-200 flex items-center justify-center">
               <span className="text-gray-400">No thumbnail</span>

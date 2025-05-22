@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { answerUserQuestion } from "@/app/dashboard/qa/actions";
+import { answerUserQuestion } from "@/app/(admin)/dashboard/qna/actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import AudioRecorder from "./audio-recorder";
+import AudioRecorder from "../qa/audio-recorder";
+import { toast } from "sonner";
 
 interface QAAnswerFormProps {
   questionId: string;
@@ -24,6 +25,7 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
   const [answerText, setAnswerText] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioKey, setAudioKey] = useState<string | null>(null);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +39,7 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
       return;
     }
     
-    if (answerType === 'AUDIO' && !audioFile) {
+    if (answerType === 'AUDIO' && !audioFile && !audioKey) {
       setError("Audio file is required");
       setIsSubmitting(false);
       return;
@@ -47,17 +49,26 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
       // Create FormData
       const formData = new FormData();
       formData.append("answerType", answerType);
-      formData.append("answerText", answerText);
-      formData.append("isPrivate", isPrivate.toString());
       
-      if (audioFile) {
-        formData.append("audioFile", audioFile);
+      if (answerType === "TEXT") {
+        formData.append("answerText", answerText);
+      } else {
+        // For audio type, append the S3 key
+        if (audioKey) {
+          formData.append("audioKey", audioKey);
+        } else if (!audioFile) {
+          setError("Please record or upload an audio file");
+          setIsSubmitting(false);
+          return;
+        }
       }
+      
+      formData.append("isPrivate", isPrivate.toString());
       
       const result = await answerUserQuestion(questionId, formData);
       
       if (result.success) {
-        router.push("/dashboard/qa");
+        router.push("/dashboard/qna");
         router.refresh();
       } else {
         setError(result.error || "An error occurred");
@@ -70,14 +81,57 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
     }
   };
   
-  const handleAudioCapture = (file: File) => {
-    setAudioFile(file);
+  const handleAudioCapture = (audioKey: string) => {
+    setAudioFile(null); // Clear any selected file
+    setAudioKey(audioKey);
   };
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setAudioFile(files[0]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setIsSubmitting(true);
+
+      // Get presigned URL
+      const presignedRes = await fetch('/api/audio/presigned-upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileType: file.type,
+        }),
+      });
+      
+      if (!presignedRes.ok) {
+        throw new Error('Failed to get presigned URL');
+      }
+      
+      const { url, key } = await presignedRes.json();
+      
+      // Upload to S3 using presigned URL
+      const uploadRes = await fetch(url, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      });
+      
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload audio file');
+      }
+      
+      setAudioFile(file); // Keep this for UI display purposes
+      setAudioKey(key); // Store the S3 key
+      toast.success('Audio file uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload audio file');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -122,7 +176,7 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
                   <div>
                     <Label>Record Audio</Label>
                     <div className="mt-2">
-                      <AudioRecorder onAudioCapture={handleAudioCapture} />
+                      <AudioRecorder onAudioCaptured={handleAudioCapture} />
                     </div>
                   </div>
                   
@@ -138,10 +192,17 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
                     />
                   </div>
                   
-                  {audioFile && (
+                  {(audioFile || audioKey) && (
                     <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                      <p className="text-sm text-gray-700 mb-2">Selected Audio:</p>
-                      <p className="text-sm text-gray-500">{audioFile.name} ({Math.round(audioFile.size / 1024)} KB)</p>
+                      <p className="text-sm text-gray-700 mb-2">
+                        {audioFile ? 
+                          `Selected Audio: ${audioFile.name} (${Math.round(audioFile.size / 1024)} KB)` : 
+                          'Audio successfully uploaded'
+                        }
+                      </p>
+                      {audioKey && !audioFile && (
+                        <p className="text-sm text-gray-500">Ready to save</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -163,7 +224,7 @@ export default function QAAnswerForm({ questionId, userQuestion }: QAAnswerFormP
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/dashboard/qa")}
+              onClick={() => router.push("/dashboard/qna")}
               disabled={isSubmitting}
             >
               Cancel
