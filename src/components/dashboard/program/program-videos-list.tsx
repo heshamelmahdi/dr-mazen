@@ -136,6 +136,8 @@ export default function ProgramVideosList({ videos }: ProgramVideosListProps) {
       if (result.success) {
         setIsDeleting(false);
         setVideoToDelete(null);
+        // Force a page reload after successful deletion
+        window.location.reload();
       } else {
         console.error(result.error);
       }
@@ -143,6 +145,15 @@ export default function ProgramVideosList({ videos }: ProgramVideosListProps) {
       console.error("Failed to delete video:", error);
     } finally {
       setProcessing(false);
+    }
+  };
+
+  // Handle dialog close
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsDeleting(open);
+    if (!open) {
+      // Force a complete page reload when dialog closes
+      window.location.reload();
     }
   };
 
@@ -317,7 +328,7 @@ export default function ProgramVideosList({ videos }: ProgramVideosListProps) {
       </div>
       
       {/* Delete confirmation dialog */}
-      <Dialog open={isDeleting} onOpenChange={setIsDeleting}>
+      <Dialog open={isDeleting} onOpenChange={handleDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Video</DialogTitle>
