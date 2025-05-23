@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 
 interface Recipe {
@@ -25,6 +26,30 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch presigned URL for the thumbnail
+  useEffect(() => {
+    const fetchThumbnailUrl = async () => {
+      if (recipe.thumbnailPath) {
+        try {
+          const response = await fetch(`/api/thumbnails/presigned-url?key=${encodeURIComponent(recipe.thumbnailPath)}`);
+          
+          if (response.ok) {
+            const data = await response.json();
+            setThumbnailUrl(data.url);
+          }
+        } catch (error) {
+          console.error("Failed to fetch thumbnail URL:", error);
+        }
+      }
+      setIsLoading(false);
+    };
+    
+    fetchThumbnailUrl();
+  }, [recipe.thumbnailPath]);
+  
   return (
     <div 
       className="bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]"
@@ -32,12 +57,22 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
     >
       <div className="relative h-48">
         {recipe.thumbnailPath ? (
-          <Image 
-            src={recipe.thumbnailPath} 
-            alt={recipe.title} 
-            fill 
-            className="object-cover"
-          />
+          isLoading ? (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">Loading...</span>
+            </div>
+          ) : thumbnailUrl ? (
+            <Image 
+              src={thumbnailUrl} 
+              alt={recipe.title} 
+              fill 
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+              <span className="text-gray-400">Error loading thumbnail</span>
+            </div>
+          )
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
             <span className="text-gray-400">No thumbnail</span>
@@ -58,52 +93,9 @@ export default function RecipeCard({ recipe, onClick }: RecipeCardProps) {
       </div>
       
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-1">{recipe.title}</h3>
-        
+        <h3 className="font-semibold text-gray-800 mb-1">{recipe.title}</h3>
         {recipe.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{recipe.description}</p>
-        )}
-        
-        {/* Nutrition Info */}
-        {(recipe.calories || recipe.protein || recipe.carbs || recipe.fat) && (
-          <div className="flex flex-wrap gap-2 mb-3">
-            {recipe.calories && (
-              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
-                {recipe.calories} cal
-              </span>
-            )}
-            {recipe.protein && (
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                {recipe.protein}g protein
-              </span>
-            )}
-            {recipe.carbs && (
-              <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                {recipe.carbs}g carbs
-              </span>
-            )}
-            {recipe.fat && (
-              <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
-                {recipe.fat}g fat
-              </span>
-            )}
-          </div>
-        )}
-        
-        {/* Tags */}
-        {recipe.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {recipe.tags.slice(0, 3).map((tag) => (
-              <span key={tag} className="text-xs text-gray-500">
-                #{tag}
-              </span>
-            ))}
-            {recipe.tags.length > 3 && (
-              <span className="text-xs text-gray-500">
-                +{recipe.tags.length - 3} more
-              </span>
-            )}
-          </div>
+          <p className="text-gray-600 text-sm line-clamp-2">{recipe.description}</p>
         )}
       </div>
     </div>

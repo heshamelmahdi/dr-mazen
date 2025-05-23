@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -41,6 +41,38 @@ interface RecipesAdminListProps {
 
 export default function RecipesAdminList({ recipes }: RecipesAdminListProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
+  const [loadingThumbnails, setLoadingThumbnails] = useState(true);
+  
+  // Fetch presigned URLs for all thumbnails via API
+  useEffect(() => {
+    const fetchPresignedUrls = async () => {
+      setLoadingThumbnails(true);
+      const urlMap: Record<string, string> = {};
+      
+      for (const recipe of recipes) {
+        if (recipe.thumbnailPath) {
+          try {
+            const response = await fetch(`/api/thumbnails/presigned-url?key=${encodeURIComponent(recipe.thumbnailPath)}`);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            urlMap[recipe.id] = data.url;
+          } catch (error) {
+            console.error(`Failed to get presigned URL for ${recipe.id}:`, error);
+          }
+        }
+      }
+      
+      setThumbnailUrls(urlMap);
+      setLoadingThumbnails(false);
+    };
+    
+    fetchPresignedUrls();
+  }, [recipes]);
   
   // Filter recipes by search term
   const filteredRecipes = recipes.filter(recipe => 
@@ -69,7 +101,12 @@ export default function RecipesAdminList({ recipes }: RecipesAdminListProps) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRecipes.map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} />
+              <RecipeCard 
+                key={recipe.id} 
+                recipe={recipe} 
+                thumbnailUrl={thumbnailUrls[recipe.id]}
+                isLoadingThumbnail={loadingThumbnails}
+              />
             ))}
           </div>
         )}
@@ -78,7 +115,15 @@ export default function RecipesAdminList({ recipes }: RecipesAdminListProps) {
   );
 }
 
-function RecipeCard({ recipe }: { recipe: Recipe }) {
+function RecipeCard({ 
+  recipe, 
+  thumbnailUrl, 
+  isLoadingThumbnail 
+}: { 
+  recipe: Recipe; 
+  thumbnailUrl?: string;
+  isLoadingThumbnail: boolean;
+}) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   
@@ -115,12 +160,22 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
     <Card className="overflow-hidden flex flex-col h-full">
       <div className="relative h-48">
         {recipe.thumbnailPath ? (
-          <Image 
-            src={recipe.thumbnailPath} 
-            alt={recipe.title} 
-            fill={true}
-            className="object-cover"
-          />
+          isLoadingThumbnail ? (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-400">Loading thumbnail...</span>
+            </div>
+          ) : thumbnailUrl ? (
+            <Image 
+              src={thumbnailUrl} 
+              alt={recipe.title} 
+              fill={true}
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+              <span className="text-gray-400">Error loading thumbnail</span>
+            </div>
+          )
         ) : (
           <div className="w-full h-full bg-gray-100 flex items-center justify-center">
             <span className="text-gray-400">No thumbnail</span>

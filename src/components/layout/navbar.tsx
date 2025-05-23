@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const navigation = [
   { name: "Program", href: "/program" },
@@ -21,8 +22,11 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-2xl font-semibold text-emerald-800">
-                Dr. Mazen
+              <Link href="/" className="text-2xl font-semibold text-emerald-800 flex items-center">
+                <Image src="/logo.svg" alt="Nutrition Website Logo" width={32} height={32} />
+                <span className="text-xl font-semibold text-emerald-800 ml-2">
+                  Nutri-Nations
+                </span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

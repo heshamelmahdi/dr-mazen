@@ -32,9 +32,9 @@ export async function updateVideoProgress(
       });
       
       // Revalidate the program list page to update UI, but only if not skipped
-      if (!skipRevalidation) {
-        revalidatePath('/program');
-      }
+      // if (!skipRevalidation) {
+      //   revalidatePath('/program');
+      // }
     }
     
     return { success: true };

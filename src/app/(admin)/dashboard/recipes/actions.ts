@@ -5,6 +5,55 @@ import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { uploadToS3 } from "@/lib/s3";
+import { getYouTubeVideoId, getBestYouTubeThumbnail } from "@/lib/youtube";
+import crypto from "crypto";
+
+// Helper function to get YouTube thumbnail
+async function getYouTubeThumbnail(youtubeUrl: string) {
+  try {
+    console.log("Starting YouTube thumbnail fetch for URL:", youtubeUrl);
+    
+    // Extract the YouTube video ID from the URL
+    const videoId = getYouTubeVideoId(youtubeUrl);
+    
+    if (!videoId) {
+      console.error("Failed to extract YouTube video ID from URL:", youtubeUrl);
+      return null;
+    }
+    
+    console.log("Extracted YouTube video ID:", videoId);
+    
+    // Get the best thumbnail URL directly
+    const thumbnailUrl = await getBestYouTubeThumbnail(videoId);
+    console.log("Got YouTube thumbnail URL:", thumbnailUrl);
+    
+    // Download the thumbnail
+    const response = await fetch(thumbnailUrl);
+    
+    if (!response.ok) {
+      console.error(`Failed to download thumbnail: ${response.status} ${response.statusText}`);
+      return null;
+    }
+    
+    // Convert to blob and then to File
+    const imageBlob = await response.blob();
+    console.log("Downloaded thumbnail image:", { size: imageBlob.size, type: imageBlob.type });
+    
+    // Create a unique filename
+    const filename = `youtube-${videoId}-${crypto.randomUUID()}.jpg`;
+    const thumbnailFile = new File([imageBlob], filename, { type: 'image/jpeg' });
+    
+    // Upload to S3 directly
+    console.log("Uploading thumbnail to S3");
+    const thumbnailPath = await uploadToS3(thumbnailFile, "thumbnails");
+    console.log("Thumbnail uploaded successfully:", thumbnailPath);
+    
+    return thumbnailPath;
+  } catch (error) {
+    console.error("Error processing YouTube thumbnail:", error);
+    return null;
+  }
+}
 
 export async function createRecipe(formData: FormData) {
   const session = await getServerSession(authOptions);
@@ -71,6 +120,13 @@ export async function createRecipe(formData: FormData) {
     if (thumbnailFile && thumbnailFile.size > 0) {
       recipeData.thumbnailPath = await uploadToS3(thumbnailFile, "thumbnails");
     }
+    // For YouTube videos without a custom thumbnail, try to get one from YouTube
+    else if (recipeType === "YOUTUBE" && youtubeUrl && (!thumbnailFile || thumbnailFile.size === 0)) {
+      const thumbnailPath = await getYouTubeThumbnail(youtubeUrl);
+      if (thumbnailPath) {
+        recipeData.thumbnailPath = thumbnailPath;
+      }
+    }
     
     // Create recipe
     await prisma.recipe.create({
@@ -120,23 +176,13 @@ export async function updateRecipe(id: string, formData: FormData) {
   }
   
   try {
-    // Get existing recipe to check for required video
+    // Get existing recipe
     const existingRecipe = await prisma.recipe.findUnique({
       where: { id }
     });
     
     if (!existingRecipe) {
       return { success: false, error: "Recipe not found" };
-    }
-    
-    // Check if self-hosted video is required and not provided
-    if (
-      recipeType === "SELF_HOSTED" &&
-      !keepExistingVideo &&
-      (!videoFile || videoFile.size === 0) &&
-      !existingRecipe.videoPath
-    ) {
-      return { success: false, error: "Video file is required for self-hosted recipes" };
     }
     
     // Process tags
@@ -159,20 +205,33 @@ export async function updateRecipe(id: string, formData: FormData) {
       isActive
     };
     
-    // Upload new video if provided
-    if (recipeType === "SELF_HOSTED" && videoFile && videoFile.size > 0) {
-      updateData.videoPath = await uploadToS3(videoFile, "recipes");
-    } else if (recipeType === "SELF_HOSTED" && !keepExistingVideo) {
-      // Clear videoPath if switching to YouTube and not keeping existing
+    // Handle video path
+    if (recipeType === "SELF_HOSTED") {
+      if (videoFile && videoFile.size > 0) {
+        updateData.videoPath = await uploadToS3(videoFile, "recipes");
+      } else if (!keepExistingVideo) {
+        updateData.videoPath = null;
+      }
+    } else {
       updateData.videoPath = null;
     }
     
-    // Upload new thumbnail if provided
+    // Handle thumbnail
     if (thumbnailFile && thumbnailFile.size > 0) {
       updateData.thumbnailPath = await uploadToS3(thumbnailFile, "thumbnails");
     } else if (!keepExistingThumbnail) {
-      // Clear thumbnailPath if not keeping existing
-      updateData.thumbnailPath = null;
+      // If recipe type changed to YouTube, try to get YouTube thumbnail
+      if (recipeType === "YOUTUBE" && youtubeUrl && 
+          (existingRecipe.recipeType !== "YOUTUBE" || existingRecipe.youtubeUrl !== youtubeUrl)) {
+        const thumbnailPath = await getYouTubeThumbnail(youtubeUrl);
+        if (thumbnailPath) {
+          updateData.thumbnailPath = thumbnailPath;
+        } else {
+          updateData.thumbnailPath = null;
+        }
+      } else {
+        updateData.thumbnailPath = null;
+      }
     }
     
     // Update recipe
@@ -183,7 +242,6 @@ export async function updateRecipe(id: string, formData: FormData) {
     
     revalidatePath("/dashboard/recipes");
     revalidatePath("/recipes");
-    revalidatePath(`/recipes/${id}`);
     return { success: true };
   } catch (error) {
     console.error("Error updating recipe:", error);

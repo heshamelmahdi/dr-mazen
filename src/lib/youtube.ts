@@ -17,4 +17,43 @@ export async function checkYouTubeVideoExists(videoId: string): Promise<boolean>
     console.error("Error checking YouTube video:", error);
     return false;
   }
+}
+
+// Get YouTube thumbnail URL from video ID
+// YouTube provides several thumbnail options:
+// - maxresdefault.jpg (highest quality, may not be available for all videos)
+// - hqdefault.jpg (high quality)
+// - mqdefault.jpg (medium quality)
+// - sddefault.jpg (standard quality)
+// - default.jpg (lowest quality)
+export function getYouTubeThumbnailUrl(videoId: string, quality: 'max' | 'high' | 'medium' | 'standard' | 'default' = 'high'): string {
+  const qualityMap = {
+    max: 'maxresdefault.jpg',
+    high: 'hqdefault.jpg',
+    medium: 'mqdefault.jpg',
+    standard: 'sddefault.jpg',
+    default: 'default.jpg'
+  };
+  
+  return `https://img.youtube.com/vi/${videoId}/${qualityMap[quality]}`;
+}
+
+// Get the highest quality YouTube thumbnail available
+export async function getBestYouTubeThumbnail(videoId: string): Promise<string> {
+  // Try to fetch the maxres thumbnail first
+  const maxresUrl = getYouTubeThumbnailUrl(videoId, 'max');
+  
+  try {
+    const response = await fetch(maxresUrl, { method: 'HEAD' });
+    // If maxres is available and not too small, use it
+    if (response.ok && parseInt(response.headers.get('content-length') || '0', 10) > 1000) {
+      return maxresUrl;
+    }
+    
+    // Fall back to high quality
+    return getYouTubeThumbnailUrl(videoId, 'high');
+  } catch (error) {
+    // If there's any error, fall back to high quality
+    return getYouTubeThumbnailUrl(videoId, 'high');
+  }
 } 

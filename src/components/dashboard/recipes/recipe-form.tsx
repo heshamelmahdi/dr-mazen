@@ -135,6 +135,12 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
     try {
       setIsSubmitting(true);
       
+      console.log("Recipe form submission started with data:", {
+        recipeType: data.recipeType,
+        youtubeUrl: data.youtubeUrl,
+        hasThumbnailFile: !!thumbnailFile
+      });
+      
       // Create FormData for file upload
       const formData = new FormData();
       
@@ -145,6 +151,7 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
       
       if (data.recipeType === "YOUTUBE") {
         formData.append("youtubeUrl", data.youtubeUrl);
+        console.log("Added YouTube URL to form data:", data.youtubeUrl);
       } else if (videoFile) {
         formData.append("video", videoFile);
       } else if (recipe && recipe.videoPath && data.recipeType === "SELF_HOSTED") {
@@ -152,11 +159,21 @@ export default function RecipeForm({ recipe }: RecipeFormProps) {
         formData.append("keepExistingVideo", "true");
       }
       
+      // Handle thumbnail logic
       if (thumbnailFile) {
         formData.append("thumbnail", thumbnailFile);
+        console.log("Added thumbnail file to form data");
       } else if (recipe && recipe.thumbnailPath) {
-        // Keep existing thumbnail
-        formData.append("keepExistingThumbnail", "true");
+        // Only keep existing thumbnail if we're not changing the YouTube URL
+        if (!(data.recipeType === "YOUTUBE" && recipe.youtubeUrl !== data.youtubeUrl)) {
+          formData.append("keepExistingThumbnail", "true");
+          console.log("Keeping existing thumbnail");
+        } else {
+          console.log("YouTube URL changed, not keeping existing thumbnail");
+        }
+        // If YouTube URL changed, let the server-side action fetch a new thumbnail
+      } else if (data.recipeType === "YOUTUBE") {
+        console.log("No thumbnail provided for YouTube video, server should fetch one");
       }
       
       // Parse numeric values

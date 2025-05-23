@@ -63,6 +63,8 @@ export default function ProgramVideoForm({
   const [thumbnailUploading, setThumbnailUploading] = useState(false);
   const [videoUploadProgress, setVideoUploadProgress] = useState(0);
   const [thumbnailUploadProgress, setThumbnailUploadProgress] = useState(0);
+  // Track YouTube ID
+  const [youtubeId, setYoutubeId] = useState<string | null>(video?.youtubeId || null);
   
   const videoInputRef = useRef<HTMLInputElement>(null);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
@@ -183,9 +185,18 @@ export default function ProgramVideoForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Check if uploads are still in progress
-    if (videoUploading || thumbnailUploading) {
-      toast.error("Please wait for uploads to complete");
+    if (isSubmitting) {
+      return;
+    }
+    
+    // Validate form
+    if (videoType === "SELF_HOSTED" && !videoPath) {
+      toast.error("Please upload a video file");
+      return;
+    }
+    
+    if (videoType === "YOUTUBE" && !youtubeId) {
+      toast.error("Please enter a valid YouTube URL or ID");
       return;
     }
     
@@ -199,8 +210,12 @@ export default function ProgramVideoForm({
         formData.set("videoPath", videoPath);
       }
       
-      // If video was uploaded but no thumbnail, extract the first frame
-      if (videoPath && !thumbnailPath && videoType === "SELF_HOSTED" && videoFile) {
+      // Handle thumbnail logic
+      if (thumbnailPath) {
+        // Use the existing thumbnail path if one is already uploaded
+        formData.set("thumbnailPath", thumbnailPath);
+      } else if (videoPath && videoType === "SELF_HOSTED" && videoFile) {
+        // For self-hosted videos with no thumbnail, extract from video
         try {
           toast.info("No thumbnail provided, extracting from video...");
           const thumbnailBlob = await extractFirstFrameFromVideo(videoFile);
@@ -217,8 +232,33 @@ export default function ProgramVideoForm({
           console.error("Error extracting thumbnail from video:", error);
           toast.error("Failed to extract thumbnail from video");
         }
-      } else if (thumbnailPath) {
-        formData.set("thumbnailPath", thumbnailPath);
+      } else if (videoType === "YOUTUBE" && youtubeId) {
+        // For YouTube videos with no thumbnail, fetch from YouTube
+        try {
+          toast.info("Fetching thumbnail from YouTube...");
+          
+          // Call the YouTube thumbnail API
+          const response = await fetch("/api/thumbnails/youtube", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ youtubeId }),
+          });
+          
+          if (!response.ok) {
+            throw new Error("Failed to fetch YouTube thumbnail");
+          }
+          
+          const data = await response.json();
+          
+          if (data.success && data.thumbnailPath) {
+            formData.set("thumbnailPath", data.thumbnailPath);
+          }
+        } catch (error) {
+          console.error("Error fetching YouTube thumbnail:", error);
+          toast.error("Failed to fetch YouTube thumbnail");
+        }
       }
       
       let result;
@@ -330,6 +370,7 @@ export default function ProgramVideoForm({
                     name="youtubeId"
                     placeholder="e.g. dQw4w9WgXcQ"
                     defaultValue={video?.youtubeId || ""}
+                    onChange={(e) => setYoutubeId(e.target.value)}
                     className="pl-10"
                   />
                   <Youtube className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />

@@ -75,7 +75,7 @@ export default function HomeContent() {
               title="Q&A" 
               description="Find answers to common questions about nutrition and health"
               imageSrc="/images/qa-icon.jpg"
-              href="/qa"
+              href="/qna"
             />
           </div>
         </div>
@@ -131,17 +131,17 @@ export default function HomeContent() {
               quote="This program completely changed my relationship with food. I've lost 15kg and feel amazing!"
               name="Sarah M."
               role="Program Member, 6 months"
-              imageSrc="/images/testimonial-1.jpg"
+              imageSrc="/images/testimonial-2.jpg"
             />
             <TestimonialCard
               quote="The recipes are delicious and so easy to follow. My whole family enjoys them now."
               name="Ahmed K."
               role="Program Member, 4 months"
-              imageSrc="/images/testimonial-2.jpg"
+              imageSrc="/images/testimonial-1.jpg"
             />
             <TestimonialCard
               quote="The personalized guidance helped me manage my diabetes naturally. Truly life-changing."
-              name="Layla R."
+              name="Maged R."
               role="Program Member, 1 year"
               imageSrc="/images/testimonial-3.jpg"
             />

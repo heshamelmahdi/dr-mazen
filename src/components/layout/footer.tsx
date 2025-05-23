@@ -2,13 +2,13 @@ export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <h3 className="text-sm font-semibold text-emerald-800 tracking-wider uppercase">
               About
             </h3>
             <p className="mt-4 text-base text-gray-500">
-              Dr. Mazen's nutrition program provides personalized guidance and
+              Nutri-Nations's nutrition program provides personalized guidance and
               resources to help you achieve your health and wellness goals.
             </p>
           </div>
@@ -20,14 +20,14 @@ export function Footer() {
               For any questions or support, please contact us at:
               <br />
               <a
-                href="mailto:support@drmazen.com"
+                href="mailto:support@nutri-nations.com"
                 className="text-emerald-600 hover:text-emerald-500"
               >
-                support@drmazen.com
+                support@nutri-nations.com
               </a>
             </p>
           </div>
-          <div>
+          {/* <div>
             <h3 className="text-sm font-semibold text-emerald-800 tracking-wider uppercase">
               Legal
             </h3>
@@ -49,11 +49,11 @@ export function Footer() {
                 </a>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
         <div className="mt-8 border-t border-gray-100 pt-8">
           <p className="text-base text-gray-400 text-center">
-            © {new Date().getFullYear()} Dr. Mazen. All rights reserved.
+            © {new Date().getFullYear()} Nutri-Nations. All rights reserved.
           </p>
         </div>
       </div>

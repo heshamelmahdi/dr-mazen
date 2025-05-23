@@ -34,11 +34,9 @@ export default function VideoPlayer({
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [youtubePlayer, setYoutubePlayer] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(initialProgress);
   const [duration, setDuration] = useState(video.durationSeconds || 0);
-  const [isCompleted, setIsCompleted] = useState(initialIsCompleted);
-  const [showControls, setShowControls] = useState(true);
+  const [isCompleted] = useState(initialIsCompleted);
   const [progressMarked, setProgressMarked] = useState(initialIsCompleted);
   
   const isYouTube = video.videoType === "YOUTUBE" && video.youtubeId;
@@ -56,30 +54,22 @@ export default function VideoPlayer({
   };
   
   const onYouTubeStateChange = (event: any) => {
-    // YouTube state: -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (video cued)
-    const playerState = event.data;
-    
-    if (playerState === 1) {
-      setIsPlaying(true);
+    // Only track when video starts playing to mark as watched
+    if (event.data === 1 && !progressMarked) {
       markVideoAsWatched();
-    } else if (playerState === 2) {
-      setIsPlaying(false);
-    } else if (playerState === 0) {
-      setIsPlaying(false);
-      setIsCompleted(true);
     }
   };
   
   // Mark video as watched once
-  const markVideoAsWatched = async () => {
+  const markVideoAsWatched = () => {
     if (!progressMarked) {
-      try {
-        await updateVideoProgress(userId, video.id, true);
-        setProgressMarked(true);
-        setIsCompleted(true);
-      } catch (error) {
+      // Fire and forget - don't block UI or update local state
+      updateVideoProgress(userId, video.id, true).catch(error => {
         console.error("Failed to mark video as watched:", error);
-      }
+      });
+      
+      // Only update the local flag to prevent repeated API calls
+      setProgressMarked(true);
     }
   };
   
@@ -90,54 +80,27 @@ export default function VideoPlayer({
     }
   }, [initialProgress, isYouTube]);
   
-  // Mark video as watched when playback starts
+  // Track YouTube video time for UI without sending to server
   useEffect(() => {
-    if (isPlaying && !progressMarked) {
-      markVideoAsWatched();
-    }
-  }, [isPlaying, progressMarked]);
-  
-  // Track current time for UI without sending to server
-  useEffect(() => {
-    if (!isPlaying) return;
+    if (!isYouTube || !youtubePlayer) return;
     
     const interval = setInterval(() => {
-      let currentTime = 0;
-      
-      if (isYouTube && youtubePlayer) {
-        currentTime = Math.floor(youtubePlayer.getCurrentTime());
-      } else if (videoRef.current) {
-        currentTime = Math.floor(videoRef.current.currentTime);
+      try {
+        const currentTime = Math.floor(youtubePlayer.getCurrentTime());
+        setCurrentTime(currentTime);
+      } catch (e) {
+        // Handle any potential YouTube API errors
+        console.error("Error getting YouTube time:", e);
       }
-      
-      setCurrentTime(currentTime);
     }, 1000);
     
     return () => clearInterval(interval);
-  }, [isPlaying, isYouTube, youtubePlayer]);
+  }, [isYouTube, youtubePlayer]);
   
   // Handle self-hosted video metadata loaded
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(Math.floor(videoRef.current.duration));
-    }
-  };
-  
-  // Handle play/pause for self-hosted video
-  const togglePlay = () => {
-    if (isYouTube && youtubePlayer) {
-      if (isPlaying) {
-        youtubePlayer.pauseVideo();
-      } else {
-        youtubePlayer.playVideo();
-      }
-    } else if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
     }
   };
   
@@ -165,6 +128,9 @@ export default function VideoPlayer({
                   autoplay: 0,
                   modestbranding: 1,
                   rel: 0,
+                  controls: 1,
+                  vq: 'hd1080',
+                  suggestedQuality: 'large',
                 },
               }}
               onReady={onYouTubeReady}
@@ -178,49 +144,18 @@ export default function VideoPlayer({
                 src={videoUrl}
                 className="max-h-screen w-full md:h-auto"
                 playsInline
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsCompleted(true)}
-                onLoadedMetadata={handleLoadedMetadata}
-                onTimeUpdate={() => videoRef.current && setCurrentTime(Math.floor(videoRef.current.currentTime))}
-                onClick={togglePlay}
-                onMouseEnter={() => setShowControls(true)}
-                onMouseLeave={() => setShowControls(false)}
+                controls
+                preload="auto"
+                // onTimeUpdate={() => {
+                //   if (videoRef.current && !progressMarked && videoRef.current.currentTime > 0) {
+                //     setCurrentTime(Math.floor(videoRef.current.currentTime));
+                //     markVideoAsWatched();
+                //   } else if (videoRef.current) {
+                //     setCurrentTime(Math.floor(videoRef.current.currentTime));
+                //   }
+                // }}
+                // onLoadedMetadata={handleLoadedMetadata}
               />
-              
-              {/* Custom Video Controls for self-hosted videos */}
-              {!isYouTube && (
-                <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4 transition-opacity ${showControls ? 'opacity-100' : 'opacity-0'}`}>
-                  <div className="w-full bg-gray-600 rounded-full h-1.5 mb-2">
-                    <div 
-                      className="bg-green-500 h-1.5 rounded-full" 
-                      style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
-                    ></div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <button 
-                      onClick={togglePlay}
-                      className="text-white focus:outline-none"
-                    >
-                      {isPlaying ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      )}
-                    </button>
-                    
-                    <div className="text-white text-sm">
-                      {formatTime(currentTime)} / {formatTime(duration)}
-                    </div>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>

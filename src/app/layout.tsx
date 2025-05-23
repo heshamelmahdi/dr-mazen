@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dr. Mazen - Nutrition Program",
+  title: "Nutri-Nations - Nutrition Program",
   description: "Personalized nutrition guidance and resources to help you achieve your health and wellness goals.",
 };
 
