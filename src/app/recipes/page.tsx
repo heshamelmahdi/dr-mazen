@@ -34,10 +34,6 @@ export default async function RecipesPage({
     Array.isArray(resolvedParams.tags) ? 
       resolvedParams.tags : [resolvedParams.tags] 
     : undefined;
-  const minCalories = resolvedParams.minCalories ? 
-    parseInt(resolvedParams.minCalories as string) : undefined;
-  const maxCalories = resolvedParams.maxCalories ? 
-    parseInt(resolvedParams.maxCalories as string) : undefined;
   
   // Build query filters
   const filters: any = { isActive: true };
@@ -48,16 +44,6 @@ export default async function RecipesPage({
   
   if (tags && tags.length > 0) {
     filters.tags = { hasSome: tags };
-  }
-  
-  if (minCalories !== undefined || maxCalories !== undefined) {
-    filters.calories = {};
-    if (minCalories !== undefined) {
-      filters.calories.gte = minCalories;
-    }
-    if (maxCalories !== undefined) {
-      filters.calories.lte = maxCalories;
-    }
   }
   
   // Fetch recipes with filters
@@ -91,9 +77,7 @@ export default async function RecipesPage({
       tags={uniqueTags}
       activeFilters={{
         mealType,
-        tags: tags || [],
-        minCalories,
-        maxCalories
+        tags: tags || []
       }}
     />
   );

@@ -53,7 +53,7 @@ export default function HomeContent() {
             Explore Your Nutrition Program
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-3 gap-8">
             {/* Program Button */}
             <NavigationCard 
               title="Program Explanation" 
@@ -178,6 +178,9 @@ interface NavigationCardProps {
 }
 
 function NavigationCard({ title, description, imageSrc, href }: NavigationCardProps) {
+  // Simplified title for mobile
+  const mobileTitle = title === "Program Explanation" ? "Program" : title;
+  
   return (
     <motion.div 
       whileHover={{ scale: 1.03 }}
@@ -185,7 +188,7 @@ function NavigationCard({ title, description, imageSrc, href }: NavigationCardPr
       className="bg-white rounded-xl shadow-md overflow-hidden h-full"
     >
       <Link href={href} className="block h-full">
-        <div className="h-48 relative">
+        <div className="h-24 md:h-48 relative">
           <Image 
             src={imageSrc} 
             alt={title} 
@@ -193,13 +196,16 @@ function NavigationCard({ title, description, imageSrc, href }: NavigationCardPr
             className="object-cover"
           />
         </div>
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-green-700 mb-2">{title}</h3>
-          <p className="text-gray-600">{description}</p>
+        <div className="md:p-6 max-md:flex max-md:justify-center">
+          <h3 className="text-xl md:text-xl font-semibold text-green-700 mb-2 md:pl-0 pl-0 text-left md:text-left">
+            <span className="md:hidden text-base">{mobileTitle}</span>
+            <span className="hidden md:inline">{title}</span>
+          </h3>
+          <p className="text-gray-600 hidden md:block">{description}</p>
           <div className="mt-4 flex justify-end">
             <span className="text-green-600 font-medium flex items-center">
-              Explore
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1" viewBox="0 0 20 20" fill="currentColor">
+              <span className="md:inline hidden">Explore</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-1 hidden md:block" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
             </span>

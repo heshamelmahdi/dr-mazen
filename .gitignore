@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Single Upload Files
+single-upload.ts
+single-upload-README.md
+video-2.png

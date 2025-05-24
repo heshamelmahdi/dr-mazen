@@ -5,8 +5,6 @@ import { useState } from "react";
 interface ActiveFilters {
   mealType?: string;
   tags: string[];
-  minCalories?: number;
-  maxCalories?: number;
 }
 
 interface RecipeFiltersProps {
@@ -30,12 +28,6 @@ export default function RecipeFilters({
   const [selectedTags, setSelectedTags] = useState<string[]>(
     activeFilters.tags || []
   );
-  const [minCalories, setMinCalories] = useState<number | undefined>(
-    activeFilters.minCalories
-  );
-  const [maxCalories, setMaxCalories] = useState<number | undefined>(
-    activeFilters.maxCalories
-  );
   
   const handleTagToggle = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -48,17 +40,13 @@ export default function RecipeFilters({
   const handleApplyFilters = () => {
     onApplyFilters({
       mealType: selectedMealType,
-      tags: selectedTags,
-      minCalories,
-      maxCalories
+      tags: selectedTags
     });
   };
   
   const handleResetFilters = () => {
     setSelectedMealType(undefined);
     setSelectedTags([]);
-    setMinCalories(undefined);
-    setMaxCalories(undefined);
     
     onApplyFilters({
       tags: []
@@ -83,41 +71,6 @@ export default function RecipeFilters({
             </option>
           ))}
         </select>
-      </div>
-      
-      {/* Calories Filter */}
-      <div>
-        <h3 className="text-md font-medium text-gray-700 mb-2">Calories</h3>
-        <div className="flex space-x-2">
-          <div>
-            <label htmlFor="minCalories" className="block text-xs text-gray-500">
-              Min
-            </label>
-            <input
-              type="number"
-              id="minCalories"
-              value={minCalories || ""}
-              onChange={(e) => setMinCalories(e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="Min"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              disabled={isLoading}
-            />
-          </div>
-          <div>
-            <label htmlFor="maxCalories" className="block text-xs text-gray-500">
-              Max
-            </label>
-            <input
-              type="number"
-              id="maxCalories"
-              value={maxCalories || ""}
-              onChange={(e) => setMaxCalories(e.target.value ? parseInt(e.target.value) : undefined)}
-              placeholder="Max"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              disabled={isLoading}
-            />
-          </div>
-        </div>
       </div>
       
       {/* Tags Filter */}

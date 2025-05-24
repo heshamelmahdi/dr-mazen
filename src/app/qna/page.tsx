@@ -27,7 +27,7 @@ export default async function QAPage() {
       isActive: true,
       isPrivate: false
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'asc' }
   });
   
   return <QAContent qaEntries={qaEntries} userId={session.user.id} />;

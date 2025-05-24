@@ -28,8 +28,6 @@ interface Recipe {
 interface ActiveFilters {
   mealType?: string;
   tags: string[];
-  minCalories?: number;
-  maxCalories?: number;
 }
 
 interface RecipesContentProps {
@@ -72,14 +70,6 @@ export default function RecipesContent({
       newFilters.tags.forEach(tag => {
         params.append('tags', tag);
       });
-    }
-    
-    if (newFilters.minCalories !== undefined) {
-      params.set('minCalories', newFilters.minCalories.toString());
-    }
-    
-    if (newFilters.maxCalories !== undefined) {
-      params.set('maxCalories', newFilters.maxCalories.toString());
     }
     
     // Use setTimeout to give a UX indication of the change

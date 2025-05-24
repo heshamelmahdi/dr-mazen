@@ -100,45 +100,6 @@ export default function RecipeDetail({
               </div>
             )}
           </div>
-          
-          {/* Nutrition Information */}
-          {(recipe.calories || recipe.protein || recipe.carbs || recipe.fat) && (
-            <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                Nutrition Information
-              </h2>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {recipe.calories && (
-                  <div className="bg-orange-50 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-orange-700">{recipe.calories}</div>
-                    <div className="text-sm text-orange-600">Calories</div>
-                  </div>
-                )}
-                
-                {recipe.protein && (
-                  <div className="bg-blue-50 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-blue-700">{recipe.protein}g</div>
-                    <div className="text-sm text-blue-600">Protein</div>
-                  </div>
-                )}
-                
-                {recipe.carbs && (
-                  <div className="bg-yellow-50 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-yellow-700">{recipe.carbs}g</div>
-                    <div className="text-sm text-yellow-600">Carbs</div>
-                  </div>
-                )}
-                
-                {recipe.fat && (
-                  <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <div className="text-2xl font-bold text-purple-700">{recipe.fat}g</div>
-                    <div className="text-sm text-purple-600">Fat</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
