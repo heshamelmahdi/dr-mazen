@@ -255,7 +255,7 @@ function TestimonialCard({ quote, name, role, imageSrc }: TestimonialCardProps) 
         <p className="text-gray-700 mb-4 italic">"{quote}"</p>
       </div>
       <div className="flex items-center mt-4">
-        <div className="h-10 w-10 rounded-full overflow-hidden mr-3">
+        {/* <div className="h-10 w-10 rounded-full overflow-hidden mr-3">
           <Image 
             src={imageSrc} 
             alt={name} 
@@ -263,7 +263,7 @@ function TestimonialCard({ quote, name, role, imageSrc }: TestimonialCardProps) 
             height={40} 
             className="object-cover"
           />
-        </div>
+        </div> */}
         <div>
           <p className="font-medium text-green-700">{name}</p>
           <p className="text-sm text-gray-500">{role}</p>

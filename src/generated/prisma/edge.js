@@ -218,7 +218,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/heshammohamed/Desktop/AI-Agent/side-projects-macbook-pro/dr-mazen-website/src/generated/prisma",
+      "value": "/Users/heshammohamed/Desktop/AI-Agent/side-projects-macbook-pro/private-mazen/dr-mazen-website/src/generated/prisma",
       "fromEnvVar": null
     },
     "config": {
@@ -232,7 +232,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "/Users/heshammohamed/Desktop/AI-Agent/side-projects-macbook-pro/dr-mazen-website/prisma/schema.prisma",
+    "sourceFilePath": "/Users/heshammohamed/Desktop/AI-Agent/side-projects-macbook-pro/private-mazen/dr-mazen-website/prisma/schema.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

@@ -53,7 +53,7 @@ export function Footer() {
         </div>
         <div className="mt-8 border-t border-gray-100 pt-8">
           <p className="text-base text-gray-400 text-center">
-            © {new Date().getFullYear()} Nutri-Nations. All rights reserved.
+            Site by <a href="https://www.whispyrai.com" target="_blank" className="underline hover:text-emerald-500">Whispyr AI</a>  © {new Date().getFullYear()}
           </p>
         </div>
       </div>
