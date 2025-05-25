@@ -23,7 +23,7 @@ export function Footer() {
                 href="mailto:support@nutri-nations.com"
                 className="text-emerald-600 hover:text-emerald-500"
               >
-                support@nutri-nations.com
+                hello@autophagy-nn.org
               </a>
             </p>
           </div>

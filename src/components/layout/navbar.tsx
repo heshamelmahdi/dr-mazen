@@ -25,7 +25,7 @@ export function Navbar() {
               <Link href="/" className="text-2xl font-semibold text-emerald-800 flex items-center">
                 <Image src="/logo.svg" alt="Nutrition Website Logo" width={32} height={32} />
                 <span className="text-xl font-semibold text-emerald-800 ml-2">
-                  Nutri-Nations
+                  Autophagy
                 </span>
               </Link>
             </div>

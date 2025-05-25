@@ -16,17 +16,17 @@ export default function HomeContent() {
             src="/images/hero-background.jpg" 
             alt="Fresh vegetables and fruits" 
             fill 
-            className="object-cover opacity-20"
+            className="object-cover opacity-60"
             priority
           />
         </div>
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-green-800 mb-6">
-            Transform Your Nutrition Journey
+            Autophagy Diet
           </h1>
           <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto">
-            Discover personalized nutrition plans, delicious recipes, and expert guidance tailored to your health goals.
+          شرح دايت أوتوفاجي
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -35,13 +35,13 @@ export default function HomeContent() {
             >
               <Link href="/program">Start Your Journey</Link>
             </Button>
-            <Button 
+            {/* <Button 
               variant="outline" 
               className="border-green-600 text-green-600 hover:bg-green-50 px-8 py-6 rounded-full text-lg"
               asChild
             >
               <Link href="/recipes">Explore Recipes</Link>
-            </Button>
+            </Button> */}
           </div>
         </div>
       </section>
@@ -50,33 +50,33 @@ export default function HomeContent() {
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-semibold text-center text-green-700 mb-12">
-            Explore Your Nutrition Program
+            Steps to Begin
           </h2>
           
           <div className="grid grid-cols-3 gap-8">
             {/* Program Button */}
             <NavigationCard 
-              title="Program Explanation" 
+              title="Step 1: Program Explanation" 
               description="Learn the fundamentals of nutrition through our educational videos"
               imageSrc="/images/program-icon.jpg"
               href="/program"
+            />
+            {/* Q&A Button */}
+            <NavigationCard 
+              title="Step 2: Q&A" 
+              description="Find answers to common questions about nutrition and health"
+              imageSrc="/images/qa-icon.jpg"
+              href="/qna"
             />
             
             {/* Recipes Button */}
             <NavigationCard 
               title="Recipes" 
-              description="Discover healthy and delicious recipes for your nutrition plan"
+              description="For your convenience: Discover healthy and delicious recipes for your nutrition plan"
               imageSrc="/images/recipes-icon.jpg"
               href="/recipes"
             />
             
-            {/* Q&A Button */}
-            <NavigationCard 
-              title="Q&A" 
-              description="Find answers to common questions about nutrition and health"
-              imageSrc="/images/qa-icon.jpg"
-              href="/qna"
-            />
           </div>
         </div>
       </section>
@@ -179,7 +179,10 @@ interface NavigationCardProps {
 
 function NavigationCard({ title, description, imageSrc, href }: NavigationCardProps) {
   // Simplified title for mobile
-  const mobileTitle = title === "Program Explanation" ? "Program" : title;
+  const mobileTitle = title === "Step 1: Program Explanation" ? "Step 1: Program" : title;
+  
+  // Split mobile title at colon for two-line display
+  const mobileTitleParts = mobileTitle.includes(':') ? mobileTitle.split(':').map(part => part.trim()) : [mobileTitle];
   
   return (
     <motion.div 
@@ -197,8 +200,17 @@ function NavigationCard({ title, description, imageSrc, href }: NavigationCardPr
           />
         </div>
         <div className="md:p-6 max-md:flex max-md:justify-center">
-          <h3 className="text-xl md:text-xl font-semibold text-green-700 mb-2 md:pl-0 pl-0 text-left md:text-left">
-            <span className="md:hidden text-base">{mobileTitle}</span>
+          <h3 className="text-xl md:text-xl font-semibold text-green-700 mb-2 md:pl-0 pl-0 text-center md:text-left">
+            <span className="md:hidden text-base">
+              {mobileTitleParts.length > 1 ? (
+                <>
+                  <div>{mobileTitleParts[0]}</div>
+                  <div>{mobileTitleParts[1]}</div>
+                </>
+              ) : (
+                mobileTitleParts[0]
+              )}
+            </span>
             <span className="hidden md:inline">{title}</span>
           </h3>
           <p className="text-gray-600 hidden md:block">{description}</p>
